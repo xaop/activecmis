@@ -1,0 +1,6 @@
+#require 'active_cmis/repositories'
+#require 'active_cmis/documents'
+#require 'active_cmis/folders'
+#require 'active_cmis/relationships'
+#require 'active_cmis/policies'
+require 'active_cmis/exceptions'
