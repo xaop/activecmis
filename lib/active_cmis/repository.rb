@@ -1,8 +1,8 @@
 module ActiveCMIS
   class Repository
-    def initialize(connection, id) #:nodoc:
+    def initialize(connection, data) #:nodoc:
       @connection = connection
-      @id = id
+      @data = data
     end
   end
 end

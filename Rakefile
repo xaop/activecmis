@@ -11,12 +11,14 @@ spec = Gem::Specification.new do |s|
   s.email = "joeri@xaop.com"
 
   s.summary = "Interface to CMIS implementations comparable to ActiveRecord"
-  s.description = s.summary
+  s.description = "A SOAP interface to CMIS, using soap4r"
 
   s.files += %w(VERSION Rakefile)
   s.files += Dir['lib/**/*.rb']
 
-  s.required_ruby_version = '>= 1.8.1'
+  s.add_runtime_dependency 'nokogiri', '>= 1.4.1'
+
+  s.required_ruby_version = '>= 1.8.6'
   s.platform = Gem::Platform::RUBY
 end
 
