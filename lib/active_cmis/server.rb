@@ -1,6 +1,6 @@
 module ActiveCMIS
-  # This class is used to manage the different CMIS endpoints.
-  class Connection
+  # This class is used to manage different CMIS servers.
+  class Server
     # A connection needs the URL to a CMIS REST endpoint.
     #
     # It's used to manage all communication with the CMIS Server
