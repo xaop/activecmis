@@ -27,22 +27,16 @@ module ActiveCMIS
     end
     cache :parent_folders
 
-    # All folders directly filed in this folder
-    def child_folders
-      
+    def items
+      query = "at:link[@rel = 'down' and @type = 'application/atom+xml;type=feed']/@href"
+      item_feed = data.xpath(query % 'feed', NS::COMBINED)
+      unless item_feed.empty?
+        feed = Nokogiri.parse(conn.get(item_feed.to_s))
+        feed.xpath('at:feed/at:entry', NS::COMBINED).map do |e|
+          ActiveCMIS::Object.from_atom_entry(conn, e)
+        end
+      end
     end
-
-    # All documents directly filed in this folder
-    def child_documents
-    end
-
-    # All policies that are filed in this folder
-    def child_policies
-      [] # TODO: implement
-    end
-
-    # Sum of sub_folders, child_documents and child_policies
-    def all_children
-    end
+    cache :items
   end
 end
