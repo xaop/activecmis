@@ -4,6 +4,7 @@
 require 'nokogiri'
 require 'net/http'
 require 'net/https'
+require 'active_cmis/internal/caching'
 require 'active_cmis/internal/connection'
 require 'active_cmis/exceptions'
 require 'active_cmis/server'

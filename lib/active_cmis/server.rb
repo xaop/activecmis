@@ -1,6 +1,7 @@
 module ActiveCMIS
   # This class is used to manage different CMIS servers.
   class Server
+    include Internal::Caching
     attr_reader :endpoint
 
     # A connection needs the URL to a CMIS REST endpoint.
@@ -36,6 +37,7 @@ module ActiveCMIS
     def repository_info
       @repository_info ||= Nokogiri.parse(conn.get(endpoint))
     end
+    cache :repository_info
 
     def conn
       @conn ||= Internal::Connection.new

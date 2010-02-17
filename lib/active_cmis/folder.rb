@@ -8,26 +8,24 @@ module ActiveCMIS
     # Actual inclusion could be done based on repository configuration
     # Alternative solution: Define on ActiveCMS::Object
     def parent_folders
-      @parent ||= begin
-                    query = "at:entry/at:link[@rel = 'up' and @type = 'application/atom+xml;type=%s']/@href"
-                    parent_feed = @data.xpath(query % 'feed', NS::COMBINED).to_s
-                    if parent_feed && parent_feed != ""
-                      feed = Nokogiri.parse(@conn.get(parent_feed))
-                      feed.xpath('at:feed', NS::COMBINED).map do |e|
-                        puts e.to_s
-                        ActiveCMIS::Object.from_atom_entry(@conn, e)
-                      end
-                    else
-                      parent_entry = @data.xpath(query % 'entry', NS::COMBINED).to_s
-                      if parent_entry && parent_entry != ""
-                        e = Nokogiri.parse(@conn.get(parent_feed)).xpath('at:entry', NS::COMBINED)
-                        [ActiveCMIS::Object.from_atom_entry(@conn, e)]
-                      else
-                        []
-                      end
-                    end
-                  end
+      query = "at:link[@rel = 'up' and @type = 'application/atom+xml;type=%s']/@href"
+      parent_feed = data.xpath(query % 'feed', NS::COMBINED)
+      unless parent_feed.empty?
+        feed = Nokogiri.parse(conn.get(parent_feed.to_s))
+        feed.xpath('at:feed/at:entry', NS::COMBINED).map do |e|
+          ActiveCMIS::Object.from_atom_entry(conn, e)
+        end
+      else
+        parent_entry = @data.xpath(query % 'entry', NS::COMBINED)
+        unless parent_entry.empty?
+          e = Nokogiri.parse(@conn.get(parent_feed.to_s)).xpath('at:entry', NS::COMBINED)
+          [ActiveCMIS::Object.from_atom_entry(conn, e)]
+        else
+          []
+        end
+      end
     end
+    cache :parent_folders
 
     # All folders directly filed in this folder
     def child_folders

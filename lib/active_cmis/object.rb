@@ -1,8 +1,11 @@
 module ActiveCMIS
   class Object
+    include Internal::Caching
+
     def initialize(conn, data)
       @conn = conn
       @data = data
+      @self_link = data.xpath("at:link[@rel = 'self']/@href", NS::COMBINED).text
     end
 
     def inspect
@@ -10,7 +13,7 @@ module ActiveCMIS
     end
 
     def key
-      @key ||= @data.xpath("cra:object/c:properties/c:propertyId[@propertyDefinitionId = 'cmis:objectId']/c:value", NS::COMBINED).text
+      @key ||= data.xpath("cra:object/c:properties/c:propertyId[@propertyDefinitionId = 'cmis:objectId']/c:value", NS::COMBINED).text
     end
 
     class << self
@@ -34,5 +37,16 @@ module ActiveCMIS
         end
       end
     end
+
+    private
+    attr_reader :self_link
+    def conn
+      @conn
+    end
+
+    def data
+      Nokogiri.parse(conn.get(self_link)).xpath('at:entry', NS::COMBINED)
+    end
+    cache :data
   end
 end
