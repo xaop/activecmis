@@ -13,13 +13,13 @@ module ActiveCMIS
     end
 
     def key
-      @key ||= data.xpath("cra:object/c:properties/c:propertyId[@propertyDefinitionId = 'cmis:objectId']/c:value", NS::COMBINED).text
+      @key ||= get_property("Id", 'cmis:objectId')
     end
 
     class << self
       def from_atom_entry(conn, data)
-        # type_id = xpath("cra:object/c:properties/c:propertyId[@propertyDefinitionId = 'cmis:objectTypeId']/c:value", NS::COMBINED).text
-        type_id = data.xpath("cra:object/c:properties/c:propertyId[@propertyDefinitionId = 'cmis:baseTypeId']/c:value", NS::COMBINED).text
+        # type_id = extract_property(data, 'cmis:objectTypeId')
+        type_id = extract_property(data, "Id", 'cmis:baseTypeId')
 
         # FIXME: flesh this out a bit more? Look at objectTypeId not baseTypeId ?
         #        make custom classes for the given type_id and do new on that? (i.e. like ActiveDCTM?)
@@ -36,12 +36,30 @@ module ActiveCMIS
           raise "The repository has an unrecognized base type #{type_id}, this is not allowed by the CMIS spec"
         end
       end
+
+      def extract_property(data, type, name)
+        data.xpath("cra:object/c:properties/c:property#{type}[@propertyDefinitionId = '#{name}']/c:value", NS::COMBINED).text
+      end
     end
+
+    def name
+      get_property("String", 'cmis:name')
+    end
+    cache :name
+
+    def base_type_id
+      get_property("Id", 'cmis:baseTypeId')
+    end
+    cache :base_type_id
 
     private
     attr_reader :self_link
     def conn
       @conn
+    end
+
+    def get_property(type, name)
+      ActiveCMIS::Object.extract_property(data, type, name)
     end
 
     def data
