@@ -1,9 +1,8 @@
 module ActiveCMIS
   class Repository
-    def initialize(connection, data) #:nodoc:
+    def initialize(connection, initial_data) #:nodoc:
       @conn = connection
-      @data = data
-      @collections = {}
+      @data = initial_data
     end
 
     # Use authentication to access the CMIS repository
@@ -14,7 +13,7 @@ module ActiveCMIS
     end
 
     def key
-      @key ||= @data.xpath('cra:repositoryInfo/c:repositoryId', NS::COMBINED).text
+      @key ||= data.xpath('cra:repositoryInfo/c:repositoryId', NS::COMBINED).text
     end
 
     def inspect
@@ -25,41 +24,47 @@ module ActiveCMIS
       template = pick_template("objectbyid")
       raise "Repository does not define required URI-template 'objectbyid'" unless template
       url = fill_in_template(template, "id" => id)
-      data = Nokogiri.parse(conn.get(url))
+      object = Nokogiri.parse(conn.get(url))
 
-      ActiveCMIS::Object.from_atom_entry(conn, data.xpath('at:entry', NS::COMBINED))
+      ActiveCMIS::Object.from_atom_entry(conn, object.xpath('at:entry', NS::COMBINED))
     end
 
     def type_by_id(id)
       template = pick_template("typebyid")
       raise "Repository does not define required URI-template 'typebyid'" unless template
       url = fill_in_template(template, "id" => id)
-      data = Nokogiri.parse(conn.get(url))
+      type = Nokogiri.parse(conn.get(url))
       # FIXME? Type should be a factory?
-      Type.new(conn, data.xpath('at:entry', NS::COMBINED))
+      Type.new(conn, type.xpath('at:entry', NS::COMBINED))
     end
 
-    %w[root query checkedout unfiled types].each do |collection|
-      define_method collection do
-        @collections[collection] ||= begin
-                                       href = @data.xpath("app:collection[cra:collectionType[child::text() = '#{collection}']]/@href", NS::COMBINED)
-                                       if href
-                                         data = Nokogiri.parse(conn.get(href.to_s))
-                                         # TODO: we need some kind of collection type
-                                         Collection.new(conn, data)
-                                       else
-                                         nil
-                                       end
-                                     end
+    %w[root query checkedout unfiled types].each do |coll_name|
+      define_method coll_name do
+        iv = :"@#{coll_name}"
+        if instance_variable_defined?(iv)
+          instance_variable_get(iv)
+        else
+          href = data.xpath("app:collection[cra:collectionType[child::text() = '#{coll_name}']]/@href", NS::COMBINED)
+          unless href.empty?
+            coll_data = Nokogiri.parse(conn.get(href.to_s))
+            # TODO: we need some kind of collection type
+            result = Collection.new(conn, coll_data)
+          else
+            result = nil
+          end
+          instance_variable_set(iv, result)
+        end
       end
     end
 
     def root_folder
-      id = @data.xpath("cra:repositoryInfo/c:rootFolderId", NS::COMBINED).text
+      id = data.xpath("cra:repositoryInfo/c:rootFolderId", NS::COMBINED).text
       object_by_id(id)
     end
 
     private
+    attr_reader :data
+
     def conn
       @conn ||= Internal::Connection.new
     end
@@ -69,7 +74,7 @@ module ActiveCMIS
       #        I'm not sure how to pick the right one in the most generic/portable way though
       #        So for the moment we pick the 1st and hope for the best
       #        Options are ignored for the moment
-      @data.xpath("n:uritemplate[n:type[child::text() = '#{name}']][1]/n:template", "n" => NS::CMIS_REST).text
+      data.xpath("n:uritemplate[n:type[child::text() = '#{name}']][1]/n:template", "n" => NS::CMIS_REST).text
     end
 
 
