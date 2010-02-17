@@ -14,7 +14,10 @@ module ActiveCMIS
       #
       # TODO? add a method to get the parsed result (and possibly handle XML errors?)
       def get(url)
-        uri = URI.parse(url)
+        case url
+        when URI; uri = url
+        else uri = URI.parse(url.to_s)
+        end
 
         http = Net::HTTP.new(uri.host, uri.port)
         req = Net::HTTP::Get.new(uri.request_uri)
