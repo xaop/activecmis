@@ -58,8 +58,7 @@ module ActiveCMIS
     end
 
     def root_folder
-      id = data.xpath("cra:repositoryInfo/c:rootFolderId", NS::COMBINED).text
-      object_by_id(id)
+      @root_folder ||= object_by_id(data.xpath("cra:repositoryInfo/c:rootFolderId", NS::COMBINED).text)
     end
 
     private
