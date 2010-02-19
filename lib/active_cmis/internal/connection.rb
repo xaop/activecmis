@@ -41,7 +41,7 @@ module ActiveCMIS
 
       def get_atom_entry(url)
         # FIXME: add validation that first child is really an entry
-        Nokogiri.parse(get(url)).child
+        get_xml(url).child
       end
     end
   end

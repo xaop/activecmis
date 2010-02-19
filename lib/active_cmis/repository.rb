@@ -24,9 +24,8 @@ module ActiveCMIS
       template = pick_template("objectbyid")
       raise "Repository does not define required URI-template 'objectbyid'" unless template
       url = fill_in_template(template, "id" => id)
-      object = Nokogiri.parse(conn.get(url))
 
-      ActiveCMIS::Object.from_atom_entry(self, object.xpath('at:entry', NS::COMBINED))
+      ActiveCMIS::Object.from_atom_entry(self, conn.get_atom_entry(url))
     end
 
     def type_by_id(id)
@@ -37,8 +36,8 @@ module ActiveCMIS
         template = pick_template("typebyid")
         raise "Repository does not define required URI-template 'typebyid'" unless template
         url = fill_in_template(template, "id" => id)
-        type = Nokogiri.parse(conn.get(url))
-        @type_by_id[id] = Type.create(conn, self, type.xpath('at:entry', NS::COMBINED))
+
+        @type_by_id[id] = Type.create(conn, self, conn.get_atom_entry(url))
       end
     end
 
@@ -50,7 +49,7 @@ module ActiveCMIS
         else
           href = data.xpath("app:collection[cra:collectionType[child::text() = '#{coll_name}']]/@href", NS::COMBINED)
           unless href.empty?
-            coll_data = Nokogiri.parse(conn.get(href.to_s))
+            coll_data = conn.get_xml(href.to_s)
             # TODO: we need some kind of collection type
             result = Collection.new(conn, coll_data)
           else

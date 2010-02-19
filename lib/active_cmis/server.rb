@@ -35,7 +35,7 @@ module ActiveCMIS
 
     private
     def repository_info
-      @repository_info ||= Nokogiri.parse(conn.get(endpoint))
+      @repository_info ||= conn.get_xml(endpoint)
     end
     cache :repository_info
 

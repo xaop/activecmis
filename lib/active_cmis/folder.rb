@@ -11,14 +11,14 @@ module ActiveCMIS
       query = "at:link[@rel = 'up' and @type = 'application/atom+xml;type=%s']/@href"
       parent_feed = data.xpath(query % 'feed', NS::COMBINED)
       unless parent_feed.empty?
-        feed = Nokogiri.parse(conn.get(parent_feed.to_s))
+        feed = conn.get_xml(parent_feed.to_s)
         feed.xpath('at:feed/at:entry', NS::COMBINED).map do |e|
           ActiveCMIS::Object.from_atom_entry(repository, e)
         end
       else
         parent_entry = @data.xpath(query % 'entry', NS::COMBINED)
         unless parent_entry.empty?
-          e = Nokogiri.parse(@conn.get(parent_feed.to_s)).xpath('at:entry', NS::COMBINED)
+          e = conn.get_atom_entry(parent_feed.to_s)
           [ActiveCMIS::Object.from_atom_entry(repository, e)]
         else
           []
@@ -31,7 +31,7 @@ module ActiveCMIS
       query = "at:link[@rel = 'down' and @type = 'application/atom+xml;type=feed']/@href"
       item_feed = data.xpath(query % 'feed', NS::COMBINED)
       unless item_feed.empty?
-        feed = Nokogiri.parse(conn.get(item_feed.to_s))
+        feed = conn.get_xml(item_feed.to_s)
         feed.xpath('at:feed/at:entry', NS::COMBINED).map do |e|
           ActiveCMIS::Object.from_atom_entry(repository, e)
         end
