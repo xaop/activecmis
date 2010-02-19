@@ -13,13 +13,13 @@ module ActiveCMIS
       unless parent_feed.empty?
         feed = Nokogiri.parse(conn.get(parent_feed.to_s))
         feed.xpath('at:feed/at:entry', NS::COMBINED).map do |e|
-          ActiveCMIS::Object.from_atom_entry(conn, e)
+          ActiveCMIS::Object.from_atom_entry(repository, e)
         end
       else
         parent_entry = @data.xpath(query % 'entry', NS::COMBINED)
         unless parent_entry.empty?
           e = Nokogiri.parse(@conn.get(parent_feed.to_s)).xpath('at:entry', NS::COMBINED)
-          [ActiveCMIS::Object.from_atom_entry(conn, e)]
+          [ActiveCMIS::Object.from_atom_entry(repository, e)]
         else
           []
         end
@@ -33,7 +33,7 @@ module ActiveCMIS
       unless item_feed.empty?
         feed = Nokogiri.parse(conn.get(item_feed.to_s))
         feed.xpath('at:feed/at:entry', NS::COMBINED).map do |e|
-          ActiveCMIS::Object.from_atom_entry(conn, e)
+          ActiveCMIS::Object.from_atom_entry(repository, e)
         end
       end
     end

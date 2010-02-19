@@ -26,16 +26,20 @@ module ActiveCMIS
       url = fill_in_template(template, "id" => id)
       object = Nokogiri.parse(conn.get(url))
 
-      ActiveCMIS::Object.from_atom_entry(conn, object.xpath('at:entry', NS::COMBINED))
+      ActiveCMIS::Object.from_atom_entry(self, object.xpath('at:entry', NS::COMBINED))
     end
 
     def type_by_id(id)
-      template = pick_template("typebyid")
-      raise "Repository does not define required URI-template 'typebyid'" unless template
-      url = fill_in_template(template, "id" => id)
-      type = Nokogiri.parse(conn.get(url))
-      # FIXME? Type should be a factory?
-      Type.new(conn, type.xpath('at:entry', NS::COMBINED))
+      @type_by_id ||= {}
+      if result = @type_by_id[id]
+        result
+      else
+        template = pick_template("typebyid")
+        raise "Repository does not define required URI-template 'typebyid'" unless template
+        url = fill_in_template(template, "id" => id)
+        type = Nokogiri.parse(conn.get(url))
+        @type_by_id[id] = Type.create(conn, self, type.xpath('at:entry', NS::COMBINED))
+      end
     end
 
     %w[root query checkedout unfiled types].each do |coll_name|
@@ -61,12 +65,12 @@ module ActiveCMIS
       @root_folder ||= object_by_id(data.xpath("cra:repositoryInfo/c:rootFolderId", NS::COMBINED).text)
     end
 
-    private
-    attr_reader :data
-
     def conn
       @conn ||= Internal::Connection.new
     end
+
+    private
+    attr_reader :data
 
     def pick_template(name, options = {})
       # FIXME: we can have more than 1 template with differing media types
