@@ -11,8 +11,6 @@ module ActiveCMIS
 
       # The return value is the unparsed body, unless an error occured
       # If an error occurred, exceptions are thrown (see _ActiveCMIS::Exception
-      #
-      # TODO? add a method to get the parsed result (and possibly handle XML errors?)
       def get(url)
         case url
         when URI; uri = url
@@ -35,6 +33,15 @@ module ActiveCMIS
         else
           raise HTTPError.new("A HTTP #{status} error occured, for more precision update the code")
         end
+      end
+
+      def get_xml(url)
+        Nokogiri.parse(get(url))
+      end
+
+      def get_atom_entry(url)
+        # FIXME: add validation that first child is really an entry
+        Nokogiri.parse(get(url)).child
       end
     end
   end
