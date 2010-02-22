@@ -1,6 +1,9 @@
 module ActiveCMIS
   class Object
     include Internal::Caching
+
+    attr_reader :repository
+
     def initialize(repository, data)
       @repository = repository
       @data = data
