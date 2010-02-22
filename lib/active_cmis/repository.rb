@@ -48,10 +48,8 @@ module ActiveCMIS
           instance_variable_get(iv)
         else
           href = data.xpath("app:collection[cra:collectionType[child::text() = '#{coll_name}']]/@href", NS::COMBINED)
-          unless href.empty?
-            coll_data = conn.get_xml(href.to_s)
-            # TODO: we need some kind of collection type
-            result = Collection.new(conn, coll_data)
+          if href.first
+            result = Collection.new(conn, href.first)
           else
             result = nil
           end
