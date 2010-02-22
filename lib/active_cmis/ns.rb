@@ -8,11 +8,11 @@ module ActiveCMIS
     ATOM = "http://www.w3.org/2005/Atom"
 
     COMBINED = {
-      "c" => CMIS_CORE,
-      "cra" => CMIS_REST,
-      "cm" => CMIS_MESSAGING,
-      "app" => APP,
-      "at" => ATOM
+      "xmlns:c" => CMIS_CORE,
+      "xmlns:cra" => CMIS_REST,
+      "xmlns:cm" => CMIS_MESSAGING,
+      "xmlns:app" => APP,
+      "xmlns:at" => ATOM
     }
   end
 end
