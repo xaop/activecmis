@@ -18,14 +18,7 @@ module ActiveCMIS
 
         req = Net::HTTP::Get.new(uri.request_uri)
         http = authenticate_request(uri, req)
-        response = http.request(req)
-
-        status = response.code.to_i
-        if 200 <= status && status < 300
-          return response.body
-        else
-          raise HTTPError.new("A HTTP #{status} error occured, for more precision update the code")
-        end
+        handle_request(http, req)
       end
 
       def get_xml(url)
@@ -42,7 +35,7 @@ module ActiveCMIS
         req = Net::HTTP::Put.new(uri.request_uri)
         req.body = body
         http = authenticate_request(uri, req)
-        response = http.request(req)
+        handle_request(http, req)
       end
 
       def post(url, body)
@@ -50,14 +43,14 @@ module ActiveCMIS
         req = Net::HTTP::Post.new(uri.request_uri)
         req.body = body
         http = authenticate_request(uri, req)
-        response = http.request(req)
+        handle_request(http, req)
       end
 
       def delete(url)
         uri = normalize_url(url)
         req = Net::HTTP::Delete.new(uri.request_uri)
         http = authenticate_request(uri, req)
-        response = http.request(req)
+        handle_request(http, req)
       end
 
       private
@@ -77,6 +70,26 @@ module ActiveCMIS
           req.send(auth[:method], *auth[:params])
         end
         http
+      end
+
+      def handle_request(http, req)
+        response = http.request(req)
+        status = response.code.to_i
+        if 200 <= status && status < 300
+          return response.body
+        else
+          # Problem: some codes 400, 405, 403, 409, 500 have multiple meanings
+          case status
+          when 400; raise Error::InvalidArgument.new(response.body)
+            # FIXME: can also be filterNotValid
+          when 404; raise Error::ObjectNotFound.new(response.body)
+          when 403; raise Error::PermissionDenied.new(response.body)
+            # FIXME: can also be streamNotSupported (?? shouldn't that be 405??)
+          when 405; raise Error::NotSupported.new(response.body)
+          else
+            raise HTTPError.new("A HTTP #{status} error occured, for more precision update the code")
+          end
+        end
       end
     end
   end
