@@ -66,6 +66,36 @@ module ActiveCMIS
       @conn ||= Internal::Connection.new
     end
 
+    # :section: Capabilities
+
+    # A hash containing all capabilities of the repository
+    def capabilities
+      @capabilities ||= begin
+                          capa = {}
+                          data.xpath("cra:repositoryInfo/c:capabilities/*", NS::COMBINED).map do |node|
+                            # FIXME: conversion should be based on knowledge about data model + transforming bool code should not be duplicated
+                            capa[node.name.sub("capability", "")] = case t = node.text
+                                              when "true", "1"; true
+                                              when "false", "0"; false
+                                              else t
+                                              end
+                          end
+                          capa
+                        end
+    end
+
+    # Responds with true if Private Working Copies are updateable, fals otherwise
+    # (if false the PWC object can only be updated during the checkin)
+    def pwc_updatable?
+      capabilities["PWCUpdatable"]
+    end
+
+    # Responds with true if different versions of the same document can
+    # be filed in different folders
+    def version_specific_filing?
+      capabilities["VersionSpecificFiling"]
+    end
+
     private
     attr_reader :data
 
