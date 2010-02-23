@@ -21,7 +21,11 @@ module ActiveCMIS
     # Returns the _Repository identified by the ID
     def repository(repository_id)
       repository_data = repository_info.xpath("/app:service/app:workspace[cra:repositoryInfo/c:repositoryId[child::text() = '#{repository_id}']]", NS::COMBINED)
-      Repository.new(conn.dup, repository_data)
+      if repository_data.empty?
+        raise Error::NotFound.new("The repository #{repository_id} doesn't exist")
+      else
+        Repository.new(conn.dup, repository_data)
+      end
     end
 
     # Lists all the available repositories
