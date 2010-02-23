@@ -85,6 +85,7 @@ module ActiveCMIS
         def load_from_data
           @attributes = {}
           data.xpath('cra:type', NS::COMBINED).children.each do |node|
+            next unless node.namespace
             next unless node.namespace.href == NS::CMIS_CORE
 
             case node.node_name

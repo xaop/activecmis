@@ -11,6 +11,7 @@ module ActiveCMIS
       params = {}
       property_type = nil
       property_definition.map do |node|
+        next unless node.namespace
         next unless node.namespace.href == NS::CMIS_CORE
 
         # FIXME: add support for "choices"
@@ -108,7 +109,7 @@ module ActiveCMIS
         end
         nil
       elsif elements.length == 1
-        values = elements.first.children
+        values = elements.first.children.select {|node| node.name == 'value' && node.namespace && node.namespace.href == ActiveCMIS::NS::CMIS_CORE}
         if required && values.empty?
           raise ActiveCMIS::Error.new("The server behaved strange: attribute #{self.inspect} required but no values specified")
         end
