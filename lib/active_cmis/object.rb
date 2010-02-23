@@ -18,6 +18,7 @@ module ActiveCMIS
       attribute('cmis:objectId')
     end
     cache :key
+    alias id key
 
     def name
       attribute('cmis:name')
