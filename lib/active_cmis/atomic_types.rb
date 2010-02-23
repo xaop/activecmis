@@ -13,6 +13,13 @@ module ActiveCMIS
       def cmis2rb(value)
         value.text
       end
+      def rb2cmis(xml, value)
+        v = value.to_s
+        if max_length && v.length > max_length
+          raise "String representation is longer than maximum (max: #{max_length}, string: \n'\n#{v}\n')\n"
+        end
+        xml["c"].value v
+      end
     end
 
     # Precision is ignored?
@@ -29,6 +36,13 @@ module ActiveCMIS
       def cmis2rb(value)
         value.text.to_f
       end
+      def rb2cmis(xml, value)
+        v = value.to_f
+        if (min_value && v < min_value) || (max_value && v > max_value)
+          raise "OutOfBounds: #{v} should be between #{min_value} and #{max_value}"
+        end
+        xml["c"].value("%f" % v)
+      end
     end
 
     class Integer
@@ -43,6 +57,13 @@ module ActiveCMIS
 
       def cmis2rb(value)
         value.text.to_i
+      end
+      def rb2cmis(xml, value)
+        v = value.to_int
+        if (min_value && v < min_value) || (max_value && v > max_value)
+          raise "OutOfBounds: #{v} should be between #{min_value} and #{max_value}"
+        end
+        xml["c"].value("%i" % v)
       end
     end
 
@@ -72,6 +93,11 @@ module ActiveCMIS
         when TIME; ::DateTime.parse(value.text)
         end
       end
+      def rb2cmis(xml, value)
+        # FIXME: respect resolution
+        p value
+        xml["c"].value(value.strftime("%Y-%m-%dT%H:%M:%S%Z"))
+      end
     end
 
     class Singleton
@@ -96,6 +122,9 @@ module ActiveCMIS
       def cmis2rb(value)
         self.class.xml_to_bool(value.text)
       end
+      def rb2cmis(xml, value)
+        xml["c"].value( (!!value).to_s )
+      end
     end
 
     class URI < Singleton
@@ -105,6 +134,9 @@ module ActiveCMIS
 
       def cmis2rb(value)
         URI.parse(value.text)
+      end
+      def rb2cmis(xml, value)
+        xml["c"].value( value.to_s )
       end
     end
 
@@ -116,6 +148,9 @@ module ActiveCMIS
       def cmis2rb(value)
         value.text
       end
+      def rb2cmis(xml, value)
+        xml["c"].value( value.to_s )
+      end
     end
 
     class HTML < Singleton
@@ -125,6 +160,10 @@ module ActiveCMIS
 
       def cmis2rb(value)
         value
+      end
+      def rb2cmis(xml, value)
+        # FIXME: Test that this works
+        xml["c"].value value
       end
     end
   end

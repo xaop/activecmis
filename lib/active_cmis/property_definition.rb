@@ -78,6 +78,19 @@ module ActiveCMIS
       "property#{property_type}"
     end
 
+    def render_property(xml, value)
+      xml["c"].send(property_name, "propertyDefinitionId" => id) {
+        if repeating
+          value.each do |v|
+            property_type.rb2cmis(xml, v)
+          end
+        else
+          p value
+          property_type.rb2cmis(xml, value)
+        end
+      }
+    end
+
     def extract_property(properties)
       elements = properties.children.select do |n|
         n.node_name == property_name &&
