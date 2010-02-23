@@ -4,9 +4,6 @@ module ActiveCMIS
     #
     # FIXME: This method should also work for document, and depending on the repository for Policy,
     # it should not work for relationships
-    # Solution?: make base types repository dependent, have this method in a mixin Fileable
-    # Actual inclusion could be done based on repository configuration
-    # Alternative solution: Define on ActiveCMS::Object
     def parent_folders
       query = "at:link[@rel = 'up' and @type = 'application/atom+xml;type=%s']/@href"
       parent_feed = data.xpath(query % 'feed', NS::COMBINED)
