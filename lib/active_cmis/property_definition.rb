@@ -49,11 +49,16 @@ module ActiveCMIS
 
       @property_type = case property_type.downcase
       when "string"
-        AtomicType::String.new(params["maxLength"].to_i)
+        max_length = params["maxLength"] ? params["maxLength"].to_i : nil
+        AtomicType::String.new(max_length)
       when "decimal"
-        AtomicType::Decimal.new(params["resolution"].to_i, params["minValue"].to_f, params["maxValue"].to_f)
+        min_value = params["minValue"] ? params["minValue"].to_f : nil
+        max_value = params["maxValue"] ? params["maxValue"].to_f : nil
+        AtomicType::Decimal.new(params["precision"].to_i, min_value, max_value)
       when "integer"
-        AtomicType::Integer.new(params["minValue"].to_i, params["maxValue"].to_i)
+        min_value = params["minValue"] ? params["minValue"].to_i : nil
+        max_value = params["maxValue"] ? params["maxValue"].to_i : nil
+        AtomicType::Integer.new(min_value, max_value)
       when "datetime"
         AtomicType::DateTime.new(params["resolution"] || ($stderr.puts "Warning: no resolution for DateTime"; "time") )
       when "html"
