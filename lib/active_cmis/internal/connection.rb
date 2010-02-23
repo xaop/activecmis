@@ -87,7 +87,7 @@ module ActiveCMIS
             # FIXME: can also be streamNotSupported (?? shouldn't that be 405??)
           when 405; raise Error::NotSupported.new(response.body)
           else
-            raise HTTPError.new("A HTTP #{status} error occured, for more precision update the code")
+            raise HTTPError.new("A HTTP #{status} error occured, for more precision update the code:\n" + response.body)
           end
         end
       end
