@@ -8,7 +8,10 @@ module ActiveCMIS
     #
     # It's used to manage all communication with the CMIS Server
     def initialize(endpoint)
-      @endpoint = endpoint
+      @endpoint = case endpoint
+                  when URI; endpoint
+                  else URI(endpoint.to_s)
+                  end
     end
 
     # Use authentication to access the CMIS repository
