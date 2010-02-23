@@ -105,15 +105,18 @@ module ActiveCMIS
       end
       if elements.empty?
         if required
-          raise ActiveCMIS::Error.new("The server behaved strange: attribute #{self.inspect} required but not present among properties")
+          STDERR.puts "The server behaved strange: attribute #{self.inspect} required but no values specified"
+          # raise ActiveCMIS::Error.new("The server behaved strange: attribute #{self.inspect} required but not present among properties")
         end
         nil
       elsif elements.length == 1
         values = elements.first.children.select {|node| node.name == 'value' && node.namespace && node.namespace.href == ActiveCMIS::NS::CMIS_CORE}
         if required && values.empty?
-          raise ActiveCMIS::Error.new("The server behaved strange: attribute #{self.inspect} required but no values specified")
+          STDERR.puts "The server behaved strange: attribute #{self.inspect} required but no values specified"
+          # raise ActiveCMIS::Error.new("The server behaved strange: attribute #{self.inspect} required but no values specified")
         end
         if !repeating && values.length > 1
+          # STDERR.puts "The server behaved strange: attribute #{self.inspect} not repeating but multiple values given"
           raise ActiveCMIS::Error.new("The server behaved strange: attribute #{self.inspect} not repeating but multiple values given")
         end
         values
