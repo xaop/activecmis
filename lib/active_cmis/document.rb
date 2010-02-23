@@ -54,7 +54,7 @@ module ActiveCMIS
       uri.query = [uri.query, "checkin=#{!!checkin}", checkin ? "major=#{!!major}" : nil, checkin ? "checkin_comment=#{escape_parameter(checkin_comment)}" : nil].compact.join "&"
       response = conn.put(uri, body)
       updated_attributes.clear
-      data = Nokogiri.parse(response).xpath("at:entry", NS::COMBINED)
+      data = Nokogiri::XML.parse(response).xpath("at:entry", NS::COMBINED)
       if data.xpath("cra:object/c:properties/c:propertyId[@propertyDefinitionId = 'cmis:objectId']/c:value", NS::COMBINED).text == id
         reload
         @data = data

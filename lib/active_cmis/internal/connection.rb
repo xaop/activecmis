@@ -22,7 +22,7 @@ module ActiveCMIS
       end
 
       def get_xml(url)
-        Nokogiri.parse(get(url))
+        Nokogiri::XML.parse(get(url))
       end
 
       def get_atom_entry(url)
