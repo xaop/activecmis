@@ -159,7 +159,7 @@ module ActiveCMIS
       end
 
       def cmis2rb(value)
-        value
+        value.children
       end
       def rb2cmis(xml, value)
         # FIXME: Test that this works
