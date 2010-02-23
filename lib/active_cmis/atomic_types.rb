@@ -1,5 +1,8 @@
 module ActiveCMIS
   module AtomicType
+    # FIXME: account for <cmis:value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+    #        current result => ""/0/... should be nil
+    # Obviously it's the same the other way around too
     class String
       attr_reader :max_length
       def initialize(max_length)
