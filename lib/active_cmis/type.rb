@@ -16,7 +16,7 @@ module ActiveCMIS
                      when "cmis:policy"
                        Policy
                      else
-                       raise ActiveCMIS::Error.new("Type without supertype, and not actually a valid base_type")
+                       raise ActiveCMIS::Error.new("Type #{klass_data.xpath("cra:type/c:id", NS::COMBINED).text} without supertype, and not actually a valid base_type (#{base_type_id.inspect})\n" + klass_data.to_s)
                      end
                    end
 
