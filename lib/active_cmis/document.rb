@@ -29,6 +29,53 @@ module ActiveCMIS
       end
     end
 
+    # :section: Content
+    # Documents can have an attached content stream and renditions.
+    # Renditions can't be altered via CMIS, the content stream may be editable
+
+    # Returns an ActiveCMIS::Rendition to the content stream or nil if there is none
+    # TODO: test that interpretion of different possibilities is correct
+    def content_stream
+      if content = data.xpath("at:content", NS::COMBINED).first
+        if content['src']
+          ActiveCMIS::Rendition.new(repository, "href" => content['src'], "type" => content["type"])
+        else
+          if content['type'] =~ /\+xml$/
+            data = content.to_xml # FIXME: this may not preserve whitespace
+          else
+            data = data.unpack("m*").first
+          end
+          ActiveCMIS::Rendition.new(repository, "data" => data, "type" => content["type"])
+        end
+      elsif content = data.xpath("cra:content", NS::COMBINED).first
+        content.children.each do |node|
+          next unless node.namespace and node.namespace.href == NS::CMIS_REST
+          data = node.text if node.name == "base64"
+          type = node.text if node.name == "mediaType"
+        end
+        data = data.unpack("m*").first
+        ActiveCMIS::Rendition.new(repository, "data" => data, "type" => type)
+      end
+    end
+
+    def renditions
+      # get links with rel 'alternate'
+      links = data.xpath("at:link[@rel = 'alternate']", NS::COMBINED)
+      links.map do |link|
+        ActiveCMIS::Rendition.new(link)
+      end
+    end
+
+    # NOTE: Not implemented yet
+    # options for content can be :file => filename or :data => binary_data
+    # :overwrite defaults to true, if false the content of the document won't be overwritten
+    # :mime_type => mime_type
+    #
+    # This returns the document with the new content, this may be a new version in the version series and as such may not be equal to self
+    def set_content_stream(mime_type, options)
+      # put to link with rel 'edit-media'
+    end
+
     # :section: Versioning
     # Documents can be versionable, other types of objects are never versionable
 

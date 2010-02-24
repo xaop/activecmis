@@ -21,6 +21,16 @@ module ActiveCMIS
         handle_request(http, req)
       end
 
+      # Does not throw errors, returns the full response (includes status code and headers)
+      def get_response(url)
+        uri = normalize_url(url)
+
+        req = Net::HTTP::Get.new(uri.request_uri)
+        http = authenticate_request(uri, req)
+        http.request(req)
+      end
+
+      # Returns the parsed body of the result
       def get_xml(url)
         Nokogiri::XML.parse(get(url))
       end
