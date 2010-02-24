@@ -20,14 +20,18 @@ module ActiveCMIS
     end
 
     def allowable_actions
-      # FIXME? we can get the allowable actions with the initial document (normally)
-      link = data.xpath("at:link[@rel = 'http://docs.oasis-open.org/ns/cmis/link/200908/allowableactions']/@href", NS::COMBINED)
-      if link
-        conn.get_xml(link)
+      if actions = data.xpath('cra:object/c:allowableActions', NS::COMBINED).first
+        actions
       else
-        []
+        links = data.xpath("at:link[@rel = 'http://docs.oasis-open.org/ns/cmis/link/200908/allowableactions']/@href", NS::COMBINED)
+        if link = links.first
+          conn.get_xml(link.text)
+        else
+          nil
+        end
       end
     end
+    cache :allowable_actions
 
     # :section: Content
     # Documents can have an attached content stream and renditions.

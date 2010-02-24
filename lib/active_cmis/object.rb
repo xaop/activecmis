@@ -64,7 +64,7 @@ module ActiveCMIS
     end
 
     def data
-      conn.get_atom_entry(self_link)
+      conn.get_atom_entry(self_link("includeAllowableActions" => true))
     end
     cache :data
 
