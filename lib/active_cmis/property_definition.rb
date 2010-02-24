@@ -48,6 +48,11 @@ module ActiveCMIS
         end
       end
 
+      if required && updatability == "readonly"
+        STDERR.puts "The server behaved strange: attribute #{self.inspect} required but readonly, will set required to false"
+        required = false
+      end
+
       @property_type = case property_type.downcase
       when "string"
         max_length = params["maxLength"] ? params["maxLength"].to_i : nil
@@ -109,8 +114,7 @@ module ActiveCMIS
       end
       if elements.empty?
         if required
-          STDERR.puts "The server behaved strange: attribute #{self.inspect} required but no values specified"
-          # raise ActiveCMIS::Error.new("The server behaved strange: attribute #{self.inspect} required but not present among properties")
+          raise ActiveCMIS::Error.new("The server behaved strange: attribute #{self.inspect} required but not present among properties")
         end
         if repeating
           []
@@ -120,11 +124,9 @@ module ActiveCMIS
       elsif elements.length == 1
         values = elements.first.children.select {|node| node.name == 'value' && node.namespace && node.namespace.href == ActiveCMIS::NS::CMIS_CORE}
         if required && values.empty?
-          STDERR.puts "The server behaved strange: attribute #{self.inspect} required but no values specified"
-          # raise ActiveCMIS::Error.new("The server behaved strange: attribute #{self.inspect} required but no values specified")
+          raise ActiveCMIS::Error.new("The server behaved strange: attribute #{self.inspect} required but no values specified")
         end
         if !repeating && values.length > 1
-          # STDERR.puts "The server behaved strange: attribute #{self.inspect} not repeating but multiple values given"
           raise ActiveCMIS::Error.new("The server behaved strange: attribute #{self.inspect} not repeating but multiple values given")
         end
         values
