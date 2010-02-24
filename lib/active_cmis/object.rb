@@ -7,7 +7,7 @@ module ActiveCMIS
     def initialize(repository, data)
       @repository = repository
       @data = data
-      @self_link = data.xpath("at:link[@rel = 'self']/@href", NS::COMBINED).text
+      @self_link = URI.parse(data.xpath("at:link[@rel = 'self']/@href", NS::COMBINED).text)
     end
 
     def inspect
@@ -53,7 +53,15 @@ module ActiveCMIS
     cache :attributes
 
     private
-    attr_reader :self_link
+    def self_link(options = nil)
+      if options.nil?
+        @self_link
+      else
+        uri = @self_link.dup
+        uri.query = [uri.query, *options.map {|key, value| "#{key}=#{value}"} ].compact.join "&"
+        uri
+      end
+    end
 
     def data
       conn.get_atom_entry(self_link)

@@ -228,10 +228,11 @@ module ActiveCMIS
         end
         body = builder.to_xml
       end
-      uri = URI.parse(self_link)
-      # FIXME: these parameters only come with PWC documents, seems to work with normal OpenCMIS documents though
-      #        Solution? use hash and just paste them all? What about escaping though
-      uri.query = [uri.query, "checkin=#{!!checkin}", checkin ? "major=#{!!major}" : nil, checkin ? "checkin_comment=#{escape_parameter(checkin_comment)}" : nil].compact.join "&"
+      parameters = {"checkin" => !!checkin}
+      if checkin
+        parameters.merge! "major" => !!major, "checkin_comment" => escape_parameter(checkin_comment)
+      end
+      uri = self_link(parameters)
       response = conn.put(uri, body)
       updated_attributes.clear
       data = Nokogiri::XML.parse(response).xpath("at:entry", NS::COMBINED)
