@@ -1,7 +1,7 @@
 module ActiveCMIS
   class PropertyDefinition
     attr_reader :object_type, :id, :local_name, :local_namespace, :query_name,
-      :display_name, :description, :property_type, :repeating, :updatability,
+      :display_name, :description, :cardinality, :property_type, :updatability,
       :inherited, :required, :queryable, :orderable, :choices, :open_choice,
       :default_value
 
@@ -75,6 +75,10 @@ module ActiveCMIS
       end
     end
 
+    def repeating
+      cardinality == "multi"
+    end
+
     def inspect
       "#{object_type.display_name}:#{id} => #{property_type}#{"[]" if repeating}"
     end
@@ -108,7 +112,11 @@ module ActiveCMIS
           STDERR.puts "The server behaved strange: attribute #{self.inspect} required but no values specified"
           # raise ActiveCMIS::Error.new("The server behaved strange: attribute #{self.inspect} required but not present among properties")
         end
-        nil
+        if repeating
+          []
+        else
+          nil
+        end
       elsif elements.length == 1
         values = elements.first.children.select {|node| node.name == 'value' && node.namespace && node.namespace.href == ActiveCMIS::NS::CMIS_CORE}
         if required && values.empty?

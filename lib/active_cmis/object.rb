@@ -34,10 +34,14 @@ module ActiveCMIS
         properties = data.xpath("cra:object/c:properties", NS::COMBINED)
         values = attr.extract_property(properties)
         hash[key] = if values.nil?
-                      # attr.extract_property should already have checked that this property is not required
-                      nil
+                      if attr.repeating
+                        []
+                      else
+                        nil
+                      end
                     elsif attr.repeating
                       values.map do |value|
+                        p value
                         attr.property_type.cmis2rb(value)
                       end
                     else
