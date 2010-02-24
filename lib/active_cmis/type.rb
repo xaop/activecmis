@@ -78,7 +78,6 @@ module ActiveCMIS
         private
         attr_reader :self_link, :conn
         def data
-          p [self.__id__, self.name, !!@data, conn]
           @data ||= conn.get_atom_entry(self_link)
         end
 

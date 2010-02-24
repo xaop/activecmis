@@ -14,6 +14,7 @@ module ActiveCMIS
       # The return value is the unparsed body, unless an error occured
       # If an error occurred, exceptions are thrown (see _ActiveCMIS::Exception
       def get(url)
+        puts "GET #{url}"
         uri = normalize_url(url)
 
         req = Net::HTTP::Get.new(uri.request_uri)
@@ -23,6 +24,7 @@ module ActiveCMIS
 
       # Does not throw errors, returns the full response (includes status code and headers)
       def get_response(url)
+        puts "GET (response) #{url}"
         uri = normalize_url(url)
 
         req = Net::HTTP::Get.new(uri.request_uri)
@@ -41,6 +43,8 @@ module ActiveCMIS
       end
 
       def put(url, body)
+        puts "PUT #{url}"
+
         uri = normalize_url(url)
         req = Net::HTTP::Put.new(uri.request_uri)
         req.body = body
@@ -49,6 +53,8 @@ module ActiveCMIS
       end
 
       def post(url, body)
+        puts "POST #{url}"
+
         uri = normalize_url(url)
         req = Net::HTTP::Post.new(uri.request_uri)
         req.body = body
