@@ -52,6 +52,20 @@ module ActiveCMIS
     end
     cache :attributes
 
+    def allowable_actions
+      if actions = data.xpath('cra:object/c:allowableActions', NS::COMBINED).first
+        actions
+      else
+        links = data.xpath("at:link[@rel = 'http://docs.oasis-open.org/ns/cmis/link/200908/allowableactions']/@href", NS::COMBINED)
+        if link = links.first
+          conn.get_xml(link.text)
+        else
+          nil
+        end
+      end
+    end
+    cache :allowable_actions
+
     # :section: Fileable
 
     # Depending on the repository there can be more than 1 parent folder
