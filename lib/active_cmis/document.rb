@@ -206,6 +206,7 @@ module ActiveCMIS
     private
     attr_writer :updated_attributes
     def put(checkin, major, checkin_comment)
+      specified_attributes = []
       if updated_attributes.empty?
         body = nil
       else
@@ -217,13 +218,11 @@ module ActiveCMIS
             end
             xml["cra"].object do
               xml["c"].properties do
-                updated_attributes.each do |key|
-                  definition = self.class.attributes[key]
-                  if definition
+                self.class.attributes.each do |key, definition|
+                  next if definition.updatability == "oncreate" && attribute("cmis:objectId")
+                  if updated_attributes.include?(key) || definition.required
                     definition.render_property(xml, attributes[key])
-                  else
-                    # FIXME: do this in update method
-                    raise "Property updated was not among actual attributes"
+                    specified_attributes << key
                   end
                 end
               end
@@ -231,6 +230,9 @@ module ActiveCMIS
           end
         end
         body = builder.to_xml
+      end
+      unless nonexistent_attributes = (updated_attributes - specified_attributes.empty)
+        raise "You updated attributes (#{nonexistent_attributes.join ','}) that are not defined in the type #{self.class.key}"
       end
       parameters = {"checkin" => !!checkin}
       if checkin
