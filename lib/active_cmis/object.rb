@@ -52,6 +52,30 @@ module ActiveCMIS
     end
     cache :attributes
 
+    # :section: Fileable
+
+    # Depending on the repository there can be more than 1 parent folder
+    # Always returns [] for relationships, policies may also return []
+    def parent_folders
+      query = "at:link[@rel = 'up' and @type = 'application/atom+xml;type=%s']/@href"
+      parent_feed = data.xpath(query % 'feed', NS::COMBINED)
+      unless parent_feed.empty?
+        feed = conn.get_xml(parent_feed.to_s)
+        feed.xpath('at:feed/at:entry', NS::COMBINED).map do |e|
+          ActiveCMIS::Object.from_atom_entry(repository, e)
+        end
+      else
+        parent_entry = @data.xpath(query % 'entry', NS::COMBINED)
+        unless parent_entry.empty?
+          e = conn.get_atom_entry(parent_feed.to_s)
+          [ActiveCMIS::Object.from_atom_entry(repository, e)]
+        else
+          []
+        end
+      end
+    end
+    cache :parent_folders
+
     private
     def self_link(options = nil)
       if options.nil?
