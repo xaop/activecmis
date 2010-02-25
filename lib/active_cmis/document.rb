@@ -236,6 +236,9 @@ module ActiveCMIS
       if checkin
         parameters.merge! "major" => !!major, "checkin_comment" => escape_parameter(checkin_comment)
       end
+      if ct = attribute("cmis:changeToken")
+        parameters.merge! "changeToken" => escape_parameter(ct)
+      end
       uri = self_link(parameters)
       response = conn.put(uri, body)
       updated_attributes.clear
