@@ -249,7 +249,7 @@ module ActiveCMIS
       URI.escape(url, /[#{control+space+delims+unwise+query}]/o)
     end
 
-    def self_or_entry(entry)
+    def self_or_new(entry)
       if entry.nil?
         nil
       elsif entry.xpath("cra:object/c:properties/c:propertyId[@propertyDefinitionId = 'cmis:objectId']/c:value", NS::COMBINED).text == id
