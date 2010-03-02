@@ -17,8 +17,7 @@ module ActiveCMIS
         uri = normalize_url(url)
 
         req = Net::HTTP::Get.new(uri.request_uri)
-        http = authenticate_request(uri, req)
-        handle_request(http, req)
+        handle_request(uri, req)
       end
 
       # Does not throw errors, returns the full response (includes status code and headers)
@@ -45,27 +44,25 @@ module ActiveCMIS
 
       def put(url, body)
         uri = normalize_url(url)
+
         req = Net::HTTP::Put.new(uri.request_uri)
         req.body = body
-        http = authenticate_request(uri, req)
-        response = handle_request(http, req)
-        puts "#{Time.now} POT #{url}"
-        response
+        handle_request(uri, req)
       end
 
       def post(url, body)
         uri = normalize_url(url)
+
         req = Net::HTTP::Post.new(uri.request_uri)
         req.body = body
-        http = authenticate_request(uri, req)
-        handle_request(http, req)
+        handle_request(uri, req)
       end
 
       def delete(url)
         uri = normalize_url(url)
+
         req = Net::HTTP::Delete.new(uri.request_uri)
-        http = authenticate_request(uri, req)
-        handle_request(http, req)
+        handle_request(uri, req)
       end
 
       private
@@ -87,8 +84,9 @@ module ActiveCMIS
         http
       end
 
-      def handle_request(http, req)
-        puts "#{Time.now} #{req.method} #{req.path}"
+      def handle_request(uri, req)
+        puts "#{Time.now} #{req.method} #{uri}"
+        http = authenticate_request(uri, req)
         response = http.request(req)
         status = response.code.to_i
         puts "#{Time.now} RECEIVED #{req.method}"
