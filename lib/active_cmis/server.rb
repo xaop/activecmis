@@ -25,7 +25,7 @@ module ActiveCMIS
     def repository(repository_id)
       repository_data = repository_info.xpath("/app:service/app:workspace[cra:repositoryInfo/c:repositoryId[child::text() = '#{repository_id}']]", NS::COMBINED)
       if repository_data.empty?
-        raise Error::NotFound.new("The repository #{repository_id} doesn't exist")
+        raise Error::ObjectNotFound.new("The repository #{repository_id} doesn't exist")
       else
         Repository.new(conn.dup, repository_data)
       end
