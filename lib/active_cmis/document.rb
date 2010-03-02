@@ -74,7 +74,7 @@ module ActiveCMIS
     def versions
       link = data.xpath("at:link[@rel = 'version-history']/@href", NS::COMBINED)
       if link.first
-        feed = conn.get(link.first.text)
+        feed = conn.get_xml(link.first.text)
         entries = feed.xpath("at:feed/at:entry", NS::COMBINED)
         entries.map do |entry|
           self_or_new(entry)
