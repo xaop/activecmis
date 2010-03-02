@@ -4,6 +4,14 @@ module ActiveCMIS
     include Internal::Caching
     attr_reader :endpoint
 
+    def self.new(endpoint)
+      endpoints[endpoint] ||= super
+    end
+
+    def self.endpoints
+      @endpoints ||= {}
+    end
+
     # A connection needs the URL to a CMIS REST endpoint.
     #
     # It's used to manage all communication with the CMIS Server
@@ -22,13 +30,18 @@ module ActiveCMIS
     end
 
     # Returns the _Repository identified by the ID
+    #
+    # Cached by the repository_id, no way to reset cache yet
     def repository(repository_id)
-      repository_data = repository_info.xpath("/app:service/app:workspace[cra:repositoryInfo/c:repositoryId[child::text() = '#{repository_id}']]", NS::COMBINED)
-      if repository_data.empty?
-        raise Error::ObjectNotFound.new("The repository #{repository_id} doesn't exist")
-      else
-        Repository.new(conn.dup, repository_data)
-      end
+      cached_repositories[repository_id] ||= begin
+                                               repository_data = repository_info.
+                                                 xpath("/app:service/app:workspace[cra:repositoryInfo/c:repositoryId[child::text() = '#{repository_id}']]", NS::COMBINED)
+                                               if repository_data.empty?
+                                                 raise Error::ObjectNotFound.new("The repository #{repository_id} doesn't exist")
+                                               else
+                                                 Repository.new(conn.dup, repository_data)
+                                               end
+                                             end
     end
 
     # Lists all the available repositories
@@ -45,6 +58,10 @@ module ActiveCMIS
       @repository_info ||= conn.get_xml(endpoint)
     end
     cache :repository_info
+
+    def cached_repositories
+      @cached_repositories ||= {}
+    end
 
     def conn
       @conn ||= Internal::Connection.new
