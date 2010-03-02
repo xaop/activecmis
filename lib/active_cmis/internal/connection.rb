@@ -14,7 +14,6 @@ module ActiveCMIS
       # The return value is the unparsed body, unless an error occured
       # If an error occurred, exceptions are thrown (see _ActiveCMIS::Exception
       def get(url)
-        puts "GET #{url}"
         uri = normalize_url(url)
 
         req = Net::HTTP::Get.new(uri.request_uri)
@@ -24,12 +23,14 @@ module ActiveCMIS
 
       # Does not throw errors, returns the full response (includes status code and headers)
       def get_response(url)
-        puts "GET (response) #{url}"
+        puts "#{Time.now} GET (response) #{url}"
         uri = normalize_url(url)
 
         req = Net::HTTP::Get.new(uri.request_uri)
         http = authenticate_request(uri, req)
-        http.request(req)
+        response = http.request(req)
+        puts "#{Time.now} GOT #{url}"
+        response
       end
 
       # Returns the parsed body of the result
@@ -43,18 +44,16 @@ module ActiveCMIS
       end
 
       def put(url, body)
-        puts "PUT #{url}"
-
         uri = normalize_url(url)
         req = Net::HTTP::Put.new(uri.request_uri)
         req.body = body
         http = authenticate_request(uri, req)
-        handle_request(http, req)
+        response = handle_request(http, req)
+        puts "#{Time.now} POT #{url}"
+        response
       end
 
       def post(url, body)
-        puts "POST #{url}"
-
         uri = normalize_url(url)
         req = Net::HTTP::Post.new(uri.request_uri)
         req.body = body
@@ -89,8 +88,10 @@ module ActiveCMIS
       end
 
       def handle_request(http, req)
+        puts "#{Time.now} #{req.method} #{req.path}"
         response = http.request(req)
         status = response.code.to_i
+        puts "#{Time.now} RECEIVED #{req.method}"
         if 200 <= status && status < 300
           return response.body
         else
