@@ -10,9 +10,7 @@ module ActiveCMIS
       end
       def rb2cmis(xml, value)
         if value.nil?
-          xml.value("xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance") do
-            xml["xsi"].nil_ "true"
-          end
+          xml.value("xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance", "xsi:nil" => "true")
         else
           _rb2cmis(xml, value)
         end
