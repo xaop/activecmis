@@ -49,8 +49,13 @@ module ActiveCMIS
     end
     cached :content_stream
 
+    # Will reload if renditionFilter was not set or cmis:none, but not in other circumstances
     def renditions
-      # get links with rel 'alternate'
+      filter = used_parameters["renditionFilter"]
+      if filter.nil? || filter == "cmis:none"
+        reload
+      end
+
       links = data.xpath("at:link[@rel = 'alternate']", NS::COMBINED)
       links.map do |link|
         ActiveCMIS::Rendition.new(repository, link)
