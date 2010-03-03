@@ -98,7 +98,6 @@ module ActiveCMIS
       end
       def rb2cmis(xml, value)
         # FIXME: respect resolution
-        p value
         xml["c"].value(value.strftime("%Y-%m-%dT%H:%M:%S%Z"))
       end
     end

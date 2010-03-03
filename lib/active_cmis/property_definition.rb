@@ -100,7 +100,6 @@ module ActiveCMIS
             property_type.rb2cmis(xml, v)
           end
         else
-          p value
           property_type.rb2cmis(xml, value)
         end
       }

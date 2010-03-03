@@ -41,7 +41,6 @@ module ActiveCMIS
                       end
                     elsif attr.repeating
                       values.map do |value|
-                        p value
                         attr.property_type.cmis2rb(value)
                       end
                     else
