@@ -47,6 +47,7 @@ module ActiveCMIS
         ActiveCMIS::Rendition.new(repository, "data" => data, "type" => type)
       end
     end
+    cached :content_stream
 
     def renditions
       # get links with rel 'alternate'
@@ -55,6 +56,7 @@ module ActiveCMIS
         ActiveCMIS::Rendition.new(link)
       end
     end
+    cached :renditions
 
     # NOTE: Not implemented yet
     # options for content can be :file => filename or :data => binary_data
