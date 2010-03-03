@@ -20,12 +20,15 @@ module ActiveCMIS
       "<#ActiveCMIS::Repository #{key}>"
     end
 
-    def object_by_id(id)
+    # default parameters: renditionFilter => "*", inccludeAllowableActions => true
+    def object_by_id(id, parameters = {"renditionFilter" => "*", "includeAllowableActions" => "true"})
+      ActiveCMIS::Object.from_parameters(self, parameters.merge("id" => id))
+    end
+
+    def object_by_id_url(parameters)
       template = pick_template("objectbyid")
       raise "Repository does not define required URI-template 'objectbyid'" unless template
-      url = fill_in_template(template, "id" => id, "renditionFilter" => "*", "includeAllowableActions" => "true")
-
-      ActiveCMIS::Object.from_atom_entry(self, conn.get_atom_entry(url))
+      url = fill_in_template(template, parameters)
     end
 
     def type_by_id(id)

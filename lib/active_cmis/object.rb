@@ -2,23 +2,24 @@ module ActiveCMIS
   class Object
     include Internal::Caching
 
-    attr_reader :repository
+    attr_reader :repository, :used_parameters
+    attr_reader :key
+    alias id key
 
-    def initialize(repository, data)
+    def initialize(repository, data, parameters)
       @repository = repository
       @data = data
-      @self_link = URI.parse(data.xpath("at:link[@rel = 'self']/@href", NS::COMBINED).text)
+
+      @key = parameters["id"] || attribute('cmis:objectId')
+      p parameters
+      @used_parameters = parameters
+      # FIXME: decide? parameters to use?? always same ? or parameter with reload ?
     end
 
     def inspect
       "#<#{self.class.inspect} @key=#{key}>"
     end
 
-    def key
-      attribute('cmis:objectId')
-    end
-    cache :key
-    alias id key
 
     def name
       attribute('cmis:name')
@@ -90,18 +91,15 @@ module ActiveCMIS
     cache :parent_folders
 
     private
-    def self_link(options = nil)
-      if options.nil?
-        @self_link
-      else
-        uri = @self_link.dup
-        uri.query = [uri.query, *options.map {|key, value| "#{key}=#{value}"} ].compact.join "&"
-        uri
-      end
+    def self_link(options = {})
+      repository.object_by_id_url(options.merge("id" => id))
     end
 
     def data
-      conn.get_atom_entry(self_link("includeAllowableActions" => true))
+      parameters = {"includeAllowableActions" => true, "renditionFilter" => "*"}
+      data = conn.get_atom_entry(self_link(parameters))
+      @used_parameters = parameters
+      data
     end
     cache :data
 
@@ -125,19 +123,25 @@ module ActiveCMIS
     class << self
       attr_reader :repository
 
-      def from_atom_entry(repository, data)
+      def from_atom_entry(repository, data, parameters = {})
         query = "cra:object/c:properties/c:propertyId[@propertyDefinitionId = '%s']/c:value"
         type_id = data.xpath(query % "cmis:objectTypeId", NS::COMBINED).text
         klass = repository.type_by_id(type_id)
         if klass
           if klass <= self
-            klass.new(repository, data)
+            klass.new(repository, data, parameters)
           else
             raise "You tried to do from_atom_entry on a type which is not a supertype of the type of the document you identified"
           end
         else
           raise "The object #{extract_property(data, "String", 'cmis:name')} has an unrecognized type #{type_id}"
         end
+      end
+
+      def from_parameters(repository, parameters)
+        url = repository.object_by_id_url(parameters)
+        data = repository.conn.get_atom_entry(url)
+        from_atom_entry(repository, data, parameters)
       end
 
       def attributes(inherited = false)
