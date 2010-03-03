@@ -53,7 +53,7 @@ module ActiveCMIS
       # get links with rel 'alternate'
       links = data.xpath("at:link[@rel = 'alternate']", NS::COMBINED)
       links.map do |link|
-        ActiveCMIS::Rendition.new(link)
+        ActiveCMIS::Rendition.new(repository, link)
       end
     end
     cached :renditions
