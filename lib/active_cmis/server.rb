@@ -5,7 +5,11 @@ module ActiveCMIS
     attr_reader :endpoint
 
     def self.new(endpoint)
-      endpoints[endpoint] ||= super
+      endpoint = case endpoint
+                 when URI; endpoint
+                 else URI(endpoint.to_s)
+                 end
+      endpoints[endpoint] ||= super(endpoint)
     end
 
     def self.endpoints
@@ -16,10 +20,7 @@ module ActiveCMIS
     #
     # It's used to manage all communication with the CMIS Server
     def initialize(endpoint)
-      @endpoint = case endpoint
-                  when URI; endpoint
-                  else URI(endpoint.to_s)
-                  end
+      @endpoint = endpoint
     end
 
     # Use authentication to access the CMIS repository
