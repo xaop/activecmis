@@ -258,7 +258,7 @@ module ActiveCMIS
       elsif entry.xpath("cra:object/c:properties/c:propertyId[@propertyDefinitionId = 'cmis:objectId']/c:value", NS::COMBINED).text == id
         self
       else
-        ActiveCMIS::Object.from_atom_entry(entry)
+        ActiveCMIS::Object.from_atom_entry(repository, entry)
       end
     end
   end
