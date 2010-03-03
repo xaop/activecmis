@@ -194,6 +194,9 @@ module ActiveCMIS
     def put(checkin, major, checkin_comment)
       specified_attributes = []
       if updated_attributes.empty?
+        if !checkin
+          return self
+        end
         body = nil
       else
         builder = Nokogiri::XML::Builder.new do |xml|
@@ -217,7 +220,7 @@ module ActiveCMIS
         end
         body = builder.to_xml
       end
-      unless nonexistent_attributes = (updated_attributes - specified_attributes.empty)
+      unless nonexistent_attributes = (updated_attributes - specified_attributes).empty?
         raise "You updated attributes (#{nonexistent_attributes.join ','}) that are not defined in the type #{self.class.key}"
       end
       parameters = {"checkin" => !!checkin}
