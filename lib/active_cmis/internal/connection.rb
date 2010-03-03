@@ -89,7 +89,7 @@ module ActiveCMIS
         http = authenticate_request(uri, req)
         response = http.request(req)
         status = response.code.to_i
-        puts "#{Time.now} RECEIVED #{req.method}"
+        puts "#{Time.now} RECEIVED #{response.code}"
         if 200 <= status && status < 300
           return response.body
         else
