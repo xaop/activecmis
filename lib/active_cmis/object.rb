@@ -51,17 +51,17 @@ module ActiveCMIS
     end
     cache :attributes
 
+
     def allowable_actions
-      if actions = data.xpath('cra:object/c:allowableActions', NS::COMBINED).first
-        actions
-      else
-        links = data.xpath("at:link[@rel = 'http://docs.oasis-open.org/ns/cmis/link/200908/allowableactions']/@href", NS::COMBINED)
-        if link = links.first
-          conn.get_xml(link.text)
-        else
-          nil
-        end
+      actions = {}
+      _allowable_actions.children.map do |node|
+        actions[node.name.sub("can", "")] = case t = node.text
+                                            when "true", "1"; true
+                                            when "false", "0"; false
+                                            else t
+                                            end
       end
+      actions
     end
     cache :allowable_actions
 
@@ -107,6 +107,19 @@ module ActiveCMIS
 
     def conn
       @repository.conn
+    end
+
+    def _allowable_actions
+      if actions = data.xpath('cra:object/c:allowableActions', NS::COMBINED).first
+        actions
+      else
+        links = data.xpath("at:link[@rel = 'http://docs.oasis-open.org/ns/cmis/link/200908/allowableactions']/@href", NS::COMBINED)
+        if link = links.first
+          conn.get_xml(link.text)
+        else
+          nil
+        end
+      end
     end
 
     class << self
