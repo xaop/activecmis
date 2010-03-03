@@ -1,9 +1,28 @@
 module ActiveCMIS
   module AtomicType
+    class CommonBase
+      def cmis2rb(value)
+        if value.children.empty? && value.attribute("nil")
+          nil
+        else
+          _cmis2rb(value)
+        end
+      end
+      def rb2cmis(xml, value)
+        if value.nil?
+          xml.value("xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance") do
+            xml["xsi"].nil_ "true"
+          end
+        else
+          _rb2cmis(xml, value)
+        end
+      end
+    end
+
     # FIXME: account for <cmis:value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
     #        current result => ""/0/... should be nil
     # Obviously it's the same the other way around too
-    class String
+    class String < CommonBase
       attr_reader :max_length
       def initialize(max_length)
         @max_length = max_length
@@ -13,10 +32,10 @@ module ActiveCMIS
         "String"
       end
 
-      def cmis2rb(value)
+      def _cmis2rb(value)
         value.text
       end
-      def rb2cmis(xml, value)
+      def _rb2cmis(xml, value)
         v = value.to_s
         if max_length && v.length > max_length
           raise "String representation is longer than maximum (max: #{max_length}, string: \n'\n#{v}\n')\n"
@@ -26,7 +45,7 @@ module ActiveCMIS
     end
 
     # Precision is ignored?
-    class Decimal
+    class Decimal < CommonBase
       attr_reader :precision, :min_value, :max_value
       def initialize(precision, min_value, max_value)
         @precision, @min_value, @max_value = precision, min_value, max_value
@@ -36,10 +55,10 @@ module ActiveCMIS
         "Decimal"
       end
 
-      def cmis2rb(value)
+      def _cmis2rb(value)
         value.text.to_f
       end
-      def rb2cmis(xml, value)
+      def _rb2cmis(xml, value)
         v = value.to_f
         if (min_value && v < min_value) || (max_value && v > max_value)
           raise "OutOfBounds: #{v} should be between #{min_value} and #{max_value}"
@@ -48,7 +67,7 @@ module ActiveCMIS
       end
     end
 
-    class Integer
+    class Integer < CommonBase
       attr_reader :min_value, :max_value
       def initialize(min_value, max_value)
         @min_value, @max_value = min_value, max_value
@@ -58,10 +77,10 @@ module ActiveCMIS
         "Integer"
       end
 
-      def cmis2rb(value)
+      def _cmis2rb(value)
         value.text.to_i
       end
-      def rb2cmis(xml, value)
+      def _rb2cmis(xml, value)
         v = value.to_int
         if (min_value && v < min_value) || (max_value && v > max_value)
           raise "OutOfBounds: #{v} should be between #{min_value} and #{max_value}"
@@ -70,7 +89,7 @@ module ActiveCMIS
       end
     end
 
-    class DateTime
+    class DateTime < CommonBase
       attr_reader :resolution
 
       @instances ||= {}
@@ -90,19 +109,19 @@ module ActiveCMIS
       DATE = "date"
       TIME = "time"
 
-      def cmis2rb(value)
+      def _cmis2rb(value)
         case @resolution
         when YEAR, DATE; ::DateTime.parse(value.text).to_date
         when TIME; ::DateTime.parse(value.text)
         end
       end
-      def rb2cmis(xml, value)
+      def _rb2cmis(xml, value)
         # FIXME: respect resolution
         xml["c"].value(value.strftime("%Y-%m-%dT%H:%M:%S%Z"))
       end
     end
 
-    class Singleton
+    class Singleton < CommonBase
       def self.new
         @singleton ||= super
       end
@@ -121,10 +140,10 @@ module ActiveCMIS
         "Boolean"
       end
 
-      def cmis2rb(value)
+      def _cmis2rb(value)
         self.class.xml_to_bool(value.text)
       end
-      def rb2cmis(xml, value)
+      def _rb2cmis(xml, value)
         xml["c"].value( (!!value).to_s )
       end
     end
@@ -134,10 +153,10 @@ module ActiveCMIS
         "Uri"
       end
 
-      def cmis2rb(value)
+      def _cmis2rb(value)
         URI.parse(value.text)
       end
-      def rb2cmis(xml, value)
+      def _rb2cmis(xml, value)
         xml["c"].value( value.to_s )
       end
     end
@@ -147,10 +166,10 @@ module ActiveCMIS
         "Id"
       end
 
-      def cmis2rb(value)
+      def _cmis2rb(value)
         value.text
       end
-      def rb2cmis(xml, value)
+      def _rb2cmis(xml, value)
         xml["c"].value( value.to_s )
       end
     end
@@ -160,10 +179,10 @@ module ActiveCMIS
         "Html"
       end
 
-      def cmis2rb(value)
+      def _cmis2rb(value)
         value.children
       end
-      def rb2cmis(xml, value)
+      def _rb2cmis(xml, value)
         # FIXME: Test that this works
         xml["c"].value value
       end
