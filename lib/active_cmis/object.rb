@@ -33,7 +33,7 @@ module ActiveCMIS
       self.class.attributes.inject({}) do |hash, (key, attr)|
         properties = data.xpath("cra:object/c:properties", NS::COMBINED)
         values = attr.extract_property(properties)
-        hash[key] = if values.nil?
+        hash[key] = if values.nil? || values.empty?
                       if attr.repeating
                         []
                       else
