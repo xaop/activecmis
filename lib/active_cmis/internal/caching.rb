@@ -7,7 +7,7 @@ module ActiveCMIS
 
       module ClassMethods
         def cache(*names)
-          (@cached_methods ||= []).concat(names)
+          (@cached_methods ||= []).concat(names).uniq!
           names.each do |name|
             alias_method("#{name}__uncached", name)
             class_eval <<-RUBY, __FILE__, __LINE__
