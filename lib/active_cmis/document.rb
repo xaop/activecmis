@@ -47,7 +47,7 @@ module ActiveCMIS
         ActiveCMIS::Rendition.new(repository, "data" => data, "type" => type)
       end
     end
-    cached :content_stream
+    cache :content_stream
 
     # Will reload if renditionFilter was not set or cmis:none, but not in other circumstances
     def renditions
@@ -61,7 +61,7 @@ module ActiveCMIS
         ActiveCMIS::Rendition.new(repository, link)
       end
     end
-    cached :renditions
+    cache :renditions
 
     # NOTE: Not implemented yet
     # options for content can be :file => filename or :data => binary_data
