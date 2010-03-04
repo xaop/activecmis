@@ -66,6 +66,21 @@ module ActiveCMIS
     end
     cache :allowable_actions
 
+    # :section: ACL
+    # All 4 subtypes can have an acl
+    def acl
+      if repository.acls_readable? && allowable_actions["GetACL"]
+        # FIXME: actual query should perhaps look at CMIS version before deciding which relation is applicable?
+        query = "at:link[@rel = 'http://docs.oasis-open.org/ns/cmis/link/200908/acl']/@href"
+        link = data.xpath(query, NS::COMBINED)
+        if link.length == 1
+          Acl.new(repository, self, link.first.text)
+        else
+          raise "Expected exactly 1 acl for #{key}, got #{link.length}"
+        end
+      end
+    end
+
     # :section: Fileable
 
     # Depending on the repository there can be more than 1 parent folder

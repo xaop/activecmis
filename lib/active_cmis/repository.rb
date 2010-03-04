@@ -99,6 +99,27 @@ module ActiveCMIS
       capabilities["VersionSpecificFiling"]
     end
 
+    # :section: ACLs
+    # The code in this section is used to describe the ACL configuration of the repository.
+    # This includes listing the possible values for acl permissions and listing which principal names are used to describe :anonymous and :world
+
+    # returns true if ACLs can at least be viewed
+    def acls_readable?
+      ["manage", "discover"].include? capabilities["ACL"]
+    end
+
+    def anonymous_user
+      if acls_readable?
+        data.xpath('cra:repositoryInfo/c:principalAnonymous', NS::COMBINED).text
+      end
+    end
+
+    def world_user
+      if acls_readable?
+        data.xpath('cra:repositoryInfo/c:principalAnyone', NS::COMBINED).text
+      end
+    end
+
     private
     attr_reader :data
 
