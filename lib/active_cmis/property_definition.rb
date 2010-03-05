@@ -105,6 +105,23 @@ module ActiveCMIS
       }
     end
 
+    # FIXME: should probably also raise error for out of bounds case
+    def validate_ruby_value(value)
+      if updatability == "readonly" # FIXME: what about oncreate?
+        raise "You are trying to update a readonly attribute (#{self})"
+      elsif required && value.nil?
+        raise "You are trying to unset a required attribute (#{self})"
+      elsif repeating != (Array === value)
+        raise "You are ignoring the cardinality for an attribute (#{self})"
+      else
+        if repeating && z = value.detect? {|v| !property_type.can_handle?(v)}
+          raise "Can't assign attribute with type #{z.class} to attribute with type #{property_type}"
+        elsif !repeating && !property_type.can_handle?(value)
+          raise "Can't assign attribute with type #{value.class} to attribute with type #{property_type}"
+        end
+      end
+    end
+
     def extract_property(properties)
       elements = properties.children.select do |n|
         n.node_name == property_name &&

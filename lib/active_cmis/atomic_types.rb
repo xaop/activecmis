@@ -15,6 +15,9 @@ module ActiveCMIS
           _rb2cmis(xml, value)
         end
       end
+      def can_handle?(value)
+        raise NotImplementedError
+      end
     end
 
     # FIXME: account for <cmis:value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
@@ -40,6 +43,9 @@ module ActiveCMIS
         end
         xml["c"].value v
       end
+      def can_handle?(value)
+        value.respond_to?(:to_s)
+      end
     end
 
     # Precision is ignored?
@@ -63,6 +69,9 @@ module ActiveCMIS
         end
         xml["c"].value("%f" % v)
       end
+      def can_handle?(value)
+        value.respond_to?(:to_s)
+      end
     end
 
     class Integer < CommonBase
@@ -84,6 +93,9 @@ module ActiveCMIS
           raise "OutOfBounds: #{v} should be between #{min_value} and #{max_value}"
         end
         xml["c"].value("%i" % v)
+      end
+      def can_handle?(value)
+        value.respond_to?(:to_int)
       end
     end
 
@@ -117,6 +129,9 @@ module ActiveCMIS
         # FIXME: respect resolution
         xml["c"].value(value.strftime("%Y-%m-%dT%H:%M:%S%Z"))
       end
+      def can_handle?(value)
+        value.respond_to?(:strftime)
+      end
     end
 
     class Singleton < CommonBase
@@ -144,6 +159,9 @@ module ActiveCMIS
       def _rb2cmis(xml, value)
         xml["c"].value( (!!value).to_s )
       end
+      def can_handle?(value)
+        [true, false].include?(value)
+      end
     end
 
     class URI < Singleton
@@ -156,6 +174,9 @@ module ActiveCMIS
       end
       def _rb2cmis(xml, value)
         xml["c"].value( value.to_s )
+      end
+      def can_handle?(value)
+        value.respond_to?(:to_s)
       end
     end
 
@@ -170,6 +191,9 @@ module ActiveCMIS
       def _rb2cmis(xml, value)
         xml["c"].value( value.to_s )
       end
+      def can_handle?(value)
+        value.respond_to?(:to_s)
+      end
     end
 
     class HTML < Singleton
@@ -183,6 +207,9 @@ module ActiveCMIS
       def _rb2cmis(xml, value)
         # FIXME: Test that this works
         xml["c"].value value
+      end
+      def can_handle?(value)
+        true # FIXME: this is probably incorrect
       end
     end
   end

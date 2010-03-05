@@ -7,10 +7,18 @@ module ActiveCMIS
       @updated_attributes = []
     end
 
+    # FIXME: should move to object
     # Updates the given attributes, without saving the document
     # Use save to make these changes permanent and visible outside this instance of the document
     # (other #reload after save on other instances of this document to reflect the changes)
     def update(attributes)
+      attributes.each do |key, value|
+        if (property = self.class.attributes[key.to_s]).nil?
+          raise "You are trying to add an unknown attribute (#{key})"
+        else
+          property.validate_ruby_value(value)
+        end
+      end
       self.updated_attributes.concat(attributes.keys).uniq!
       self.attributes.merge!(attributes)
     end
