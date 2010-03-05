@@ -20,8 +20,8 @@ module ActiveCMIS
       "<#ActiveCMIS::Repository #{key}>"
     end
 
-    # default parameters: renditionFilter => "*", inccludeAllowableActions => true
-    def object_by_id(id, parameters = {"renditionFilter" => "*", "includeAllowableActions" => "true"})
+    # default parameters: renditionFilter => "*", includeAllowableActions => true, includeACL => true
+    def object_by_id(id, parameters = {"renditionFilter" => "*", "includeAllowableActions" => "true", "includeACL" => true})
       ActiveCMIS::Object.from_parameters(self, parameters.merge("id" => id))
     end
 

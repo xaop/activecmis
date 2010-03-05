@@ -74,7 +74,7 @@ module ActiveCMIS
         query = "at:link[@rel = 'http://docs.oasis-open.org/ns/cmis/link/200908/acl']/@href"
         link = data.xpath(query, NS::COMBINED)
         if link.length == 1
-          Acl.new(repository, self, link.first.text)
+          Acl.new(repository, self, link.first.text, data.xpath("cra:object/c:acl", NS::COMBINED))
         else
           raise "Expected exactly 1 acl for #{key}, got #{link.length}"
         end
@@ -111,7 +111,7 @@ module ActiveCMIS
     end
 
     def data
-      parameters = {"includeAllowableActions" => true, "renditionFilter" => "*"}
+      parameters = {"includeAllowableActions" => true, "renditionFilter" => "*", "includeACL" => true}
       data = conn.get_atom_entry(self_link(parameters))
       @used_parameters = parameters
       data

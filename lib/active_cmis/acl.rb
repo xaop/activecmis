@@ -5,19 +5,20 @@ module ActiveCMIS
 
     attr_reader :document, :repository
 
-    def initialize(repository, document, link)
+    def initialize(repository, document, link, _data = nil)
       @repository = repository
       @document   = document
       @self_link  = case link
                     when URI; link
                     else URI(link)
                     end
+      @data = _data if _data
     end
 
     # Returns an array with all Aclentries.
     #
     def permissions
-      data.xpath("c:acl/c:permission", NS::COMBINED).map do |permit|
+      data.xpath("c:permission", NS::COMBINED).map do |permit|
         principal      = nil
         permissions    = []
         direct         = false
@@ -47,7 +48,7 @@ module ActiveCMIS
     # An indicator that the ACL fully describes the permissions for this object.
     # This means that there are no other security constraints.
     def exact
-      value = data.xpath("c:acl/c:exact", NS::COMBINED)
+      value = data.xpath("c:exact", NS::COMBINED)
       if value.empty?
         false
       elsif value.length == 1
@@ -127,7 +128,7 @@ module ActiveCMIS
     end
 
     def data
-      conn.get_xml(self_link)
+      conn.get_xml(self_link).xpath("c:acl", NS::COMBINED)
     end
     cache :data
 
