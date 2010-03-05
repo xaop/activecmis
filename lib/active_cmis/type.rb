@@ -126,6 +126,7 @@ module ActiveCMIS
               @attributes[attr.id] = attr
             end
           end
+          @attributes.freeze
         end
       end
       klass
