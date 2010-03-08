@@ -12,7 +12,16 @@ module ActiveCMIS
 
       @updated_attributes = []
 
-      @key = parameters["id"] || attribute('cmis:objectId')
+      if @data.nil?
+        # Creating a new type from scratch
+        raise "This type is not creatable" unless self.class.creatable
+        @key = parameters["id"]
+        @attributes = {}
+        @allowable_actions = {}
+        @parent_folders = [] # start unlinked
+      else
+        @key = parameters["id"] || attribute('cmis:objectId')
+      end
       @used_parameters = parameters
       # FIXME: decide? parameters to use?? always same ? or parameter with reload ?
     end
@@ -70,7 +79,14 @@ module ActiveCMIS
     end
 
     def save
-      response = put(false, nil, nil)
+      if @key.nil?
+        # Create from scratch
+        # Does it need to be linked? Is it linked? To 1 folder?
+        # Are all required attributes filled in?
+        # post to folder? or unfiled collection
+      else
+        response = put(false, nil, nil)
+      end
     end
 
     def allowable_actions
