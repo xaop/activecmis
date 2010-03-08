@@ -18,17 +18,38 @@ module ActiveCMIS
                   @#{name} = #{name}__uncached(*a, &b)
                 end
               end
-              def reload
-                #{@cached_methods.inspect}.map do |method|
-                  :"@\#{method}"
-                end.select do |iv|
-                  instance_variable_defined? iv
-                end.each do |iv|
-                  remove_instance_variable iv
-                end + (defined?(super) ? super : [])
-              end
             RUBY
           end
+          reloadable
+        end
+
+        def cached_reader(*names)
+          (@cached_methods ||= []).concat(names).uniq!
+          names.each do |name|
+            define_method "#{name}" do
+              if instance_variable_defined? "@#{name}"
+                instance_variable_get("@#{name}")
+              else
+                load_from_data # FIXME: make flexible?
+                instance_variable_get("@#{name}")
+              end
+            end
+          end
+          reloadable
+        end
+
+        def reloadable
+          class_eval <<-RUBY, __FILE__, __LINE__
+            def reload
+              #{@cached_methods.inspect}.map do |method|
+                :"@\#{method}"
+              end.select do |iv|
+                instance_variable_defined? iv
+              end.each do |iv|
+                remove_instance_variable iv
+              end + (defined?(super) ? super : [])
+            end
+          RUBY
         end
       end
     end
