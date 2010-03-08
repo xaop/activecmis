@@ -10,8 +10,9 @@ module ActiveCMIS
       @repository = repository
       @data = data
 
+      @updated_attributes = []
+
       @key = parameters["id"] || attribute('cmis:objectId')
-      p parameters
       @used_parameters = parameters
       # FIXME: decide? parameters to use?? always same ? or parameter with reload ?
     end
@@ -20,11 +21,12 @@ module ActiveCMIS
       "#<#{self.class.inspect} @key=#{key}>"
     end
 
-
     def name
       attribute('cmis:name')
     end
     cache :name
+
+    attr_reader :updated_attributes
 
     def attribute(name)
       attributes[name]
@@ -52,6 +54,24 @@ module ActiveCMIS
     end
     cache :attributes
 
+    # Updates the given attributes, without saving the document
+    # Use save to make these changes permanent and visible outside this instance of the document
+    # (other #reload after save on other instances of this document to reflect the changes)
+    def update(attributes)
+      attributes.each do |key, value|
+        if (property = self.class.attributes[key.to_s]).nil?
+          raise "You are trying to add an unknown attribute (#{key})"
+        else
+          property.validate_ruby_value(value)
+        end
+      end
+      self.updated_attributes.concat(attributes.keys).uniq!
+      self.attributes.merge!(attributes)
+    end
+
+    def save
+      response = put(false, nil, nil)
+    end
 
     def allowable_actions
       actions = {}
@@ -132,6 +152,59 @@ module ActiveCMIS
         else
           nil
         end
+      end
+    end
+
+    attr_writer :updated_attributes
+    def put(checkin, major, checkin_comment)
+      specified_attributes = []
+      if updated_attributes.empty?
+        if !checkin
+          return self
+        end
+        body = nil
+      else
+        builder = Nokogiri::XML::Builder.new do |xml|
+          xml.entry(NS::COMBINED) do
+            xml.parent.namespace = xml.parent.namespace_definitions.detect {|ns| ns.prefix == "at"}
+            xml["at"].author do
+              xml["at"].name conn.user # FIXME: find reliable way to set author?
+            end
+            xml["cra"].object do
+              xml["c"].properties do
+                self.class.attributes.each do |key, definition|
+                  next if definition.updatability == "oncreate" && attribute("cmis:objectId")
+                  if updated_attributes.include?(key) || definition.required
+                    definition.render_property(xml, attributes[key])
+                    specified_attributes << key
+                  end
+                end
+              end
+            end
+          end
+        end
+        body = builder.to_xml
+      end
+      unless nonexistent_attributes = (updated_attributes - specified_attributes).empty?
+        raise "You updated attributes (#{nonexistent_attributes.join ','}) that are not defined in the type #{self.class.key}"
+      end
+      parameters = {"checkin" => !!checkin}
+      if checkin
+        parameters.merge! "major" => !!major, "checkin_comment" => escape_parameter(checkin_comment)
+      end
+      if ct = attribute("cmis:changeToken")
+        parameters.merge! "changeToken" => escape_parameter(ct)
+      end
+      uri = self_link(parameters)
+      response = conn.put(uri, body)
+      updated_attributes.clear
+      data = Nokogiri::XML.parse(response).xpath("at:entry", NS::COMBINED)
+      if data.xpath("cra:object/c:properties/c:propertyId[@propertyDefinitionId = 'cmis:objectId']/c:value", NS::COMBINED).text == id
+        reload
+        @data = data
+        self
+      else
+        ActiveCMIS::Object.from_atom_entry(repository, data)
       end
     end
 
