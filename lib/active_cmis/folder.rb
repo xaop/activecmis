@@ -20,5 +20,15 @@ module ActiveCMIS
         item_feed.to_s
       end
     end
+
+
+    private
+    def create_url
+      if f = parent_folders.first
+        f.child_collection_url
+      else
+        raise "Not possible"
+      end
+    end
   end
 end

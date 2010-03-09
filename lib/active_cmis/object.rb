@@ -87,11 +87,6 @@ module ActiveCMIS
 
     def save
       if @key.nil?
-        # Create from scratch
-        # Does it need to be linked? Is it linked? To 1 folder?
-        if parent_folders.empty?
-          raise "Can't create a document without a link in REST interface"
-        end
         # Are all required attributes filled in?
         if self.class.required_attributes.any? {|a, _| attribute(a).nil? }
           raise "Not all required attributes are filled in"
@@ -118,28 +113,23 @@ module ActiveCMIS
         end
         body = builder.to_xml
 
-        # FIXME: allow policies to remain unlinked
-        # FIXME: allow creation of relationships?
-        main_folder, *extra_folders = parent_folders
-        # post to folder? or unfiled collection
-        folder = main_folder.child_collection_url
+        # Keep link to current parent_folders for linking afterwards
+        all_folders = parent_folders
 
-        # FIXME: don't set versioningState for folders or policies
-        folder = folder + "&versioningState=none"
-
-        response = conn.post(folder, body, "Content-Type" => "application/xmiatom+xml;type=entry")
-        # XXX: What about location header in response?
+        url = create_url
+        response = conn.post(create_url, body, "Content-Type" => "application/xmiatom+xml;type=entry")
+        # XXX: Currently ignoring Location header in response
 
         reload
         @data = Nokogiri::XML::parse(response) # Assume that a response indicates success?
         @key  = attribute("cmis:objectId")
 
-        unless extra_folders.empty?
+        unless (extra_folders = all_folders - parent_folders).empty?
           extra_folders.each do |f|
             link(f)
           end
+          save
         end
-        save
 
         self
       else

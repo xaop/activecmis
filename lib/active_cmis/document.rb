@@ -192,5 +192,15 @@ module ActiveCMIS
         ActiveCMIS::Object.from_atom_entry(repository, entry)
       end
     end
+
+    def create_url
+      if f = parent_folders.first
+        url = f.child_collection_url
+        Internal::Utils.add_parameters(url, "versioningState" => "none")
+      else
+        raise "Operation not supported by CMIS"
+        # Can't create documents that are unfiled
+      end
+    end
   end
 end

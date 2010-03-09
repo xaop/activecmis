@@ -7,5 +7,11 @@ module ActiveCMIS
     def parent_folders
       []
     end
+
+    private
+    def create_url
+      raise "not yet"
+      # Resource collection of parent or child?
+    end
   end
 end
