@@ -47,6 +47,11 @@ module ActiveCMIS
         end
       end
 
+      # defaults to all attributes (inherited and non-inherited)
+      def required_attributes
+        attributes(true).reject {|key, value| !value.required}
+      end
+
       alias imported_reload reload
       def reload
         remove_instance_variable(:@attributes) if defined? @attributes
