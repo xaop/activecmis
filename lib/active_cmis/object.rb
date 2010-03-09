@@ -16,7 +16,6 @@ module ActiveCMIS
         # Creating a new type from scratch
         raise "This type is not creatable" unless self.class.creatable
         @key = parameters["id"]
-        @attributes = {}
         @allowable_actions = {}
         @parent_folders = [] # start unlinked
       else
@@ -43,21 +42,29 @@ module ActiveCMIS
 
     def attributes
       self.class.attributes.inject({}) do |hash, (key, attr)|
-        properties = data.xpath("cra:object/c:properties", NS::COMBINED)
-        values = attr.extract_property(properties)
-        hash[key] = if values.nil? || values.empty?
-                      if attr.repeating
-                        []
+        if data.nil?
+          if key == "cmis:objectTypeId"
+            hash[key] = self.class.id
+          else
+            hash[key] = nil
+          end
+        else
+          properties = data.xpath("cra:object/c:properties", NS::COMBINED)
+          values = attr.extract_property(properties)
+          hash[key] = if values.nil? || values.empty?
+                        if attr.repeating
+                          []
+                        else
+                          nil
+                        end
+                      elsif attr.repeating
+                        values.map do |value|
+                          attr.property_type.cmis2rb(value)
+                        end
                       else
-                        nil
+                        attr.property_type.cmis2rb(values.first)
                       end
-                    elsif attr.repeating
-                      values.map do |value|
-                        attr.property_type.cmis2rb(value)
-                      end
-                    else
-                      attr.property_type.cmis2rb(values.first)
-                    end
+        end
         hash
       end
     end
@@ -82,9 +89,61 @@ module ActiveCMIS
       if @key.nil?
         # Create from scratch
         # Does it need to be linked? Is it linked? To 1 folder?
+        if parent_folders.empty?
+          raise "Can't create a document without a link in REST interface"
+        end
         # Are all required attributes filled in?
+        if self.class.required_attributes.any? {|a, _| attribute(a).nil? }
+          raise "Not all required attributes are filled in"
+        end
+
+        # FIXME: remove redundancy with put?
+        builder = Nokogiri::XML::Builder.new do |xml|
+          xml.entry(NS::COMBINED) do
+            xml.parent.namespace = xml.parent.namespace_definitions.detect {|ns| ns.prefix == "at"}
+            xml["at"].author do
+              xml["at"].name conn.user # FIXME: find reliable way to set author?
+            end
+            xml["at"].id_ do xml.text "blah" end
+            xml["cra"].object do
+              xml["c"].properties do
+                self.class.attributes.each do |key, definition|
+                  if updated_attributes.include?(key) || definition.required
+                    definition.render_property(xml, attributes[key])
+                  end
+                end
+              end
+            end
+          end
+        end
+        body = builder.to_xml
+
+        # FIXME: allow policies to remain unlinked
+        # FIXME: allow creation of relationships?
+        main_folder, *extra_folders = parent_folders
         # post to folder? or unfiled collection
+        folder = main_folder.child_collection_url
+
+        # FIXME: don't set versioningState for folders or policies
+        folder = folder + "&versioningState=none"
+
+        response = conn.post(folder, body, "Content-Type" => "application/xmiatom+xml;type=entry")
+        # XXX: What about location header in response?
+
+        reload
+        @data = Nokogiri::XML::parse(response) # Assume that a response indicates success?
+        @key  = attribute("cmis:objectId")
+
+        unless extra_folders.empty?
+          extra_folders.each do |f|
+            link(f)
+          end
+        end
+        save
+
+        self
       else
+        # TODO: implement updating linking when saving ordinarily
         response = put(false, nil, nil)
       end
     end
