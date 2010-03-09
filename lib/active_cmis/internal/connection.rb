@@ -50,10 +50,11 @@ module ActiveCMIS
         handle_request(uri, req)
       end
 
-      def post(url, body)
+      def post(url, body, headers = {})
         uri = normalize_url(url)
 
         req = Net::HTTP::Post.new(uri.request_uri)
+        headers.each {|k,v| req.add_field k, v}
         req.body = body
         handle_request(uri, req)
       end
