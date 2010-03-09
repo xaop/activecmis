@@ -143,12 +143,8 @@ module ActiveCMIS
     #      -> 'http://example.org/repo/%40root%40?includeRelationships&includeACL=true'
     def fill_in_template(template, values)
       result = template.gsub /\{([^}]+)\}/ do |match|
-        percent_encode(values[$1].to_s)
+        Internal::Utils.percent_encode(values[$1].to_s)
       end
-    end
-
-    def percent_encode(string)
-      URI.escape(string, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
     end
   end
 end

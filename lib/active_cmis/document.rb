@@ -183,15 +183,6 @@ module ActiveCMIS
     end
 
     private
-    def escape_parameter(url)
-      control = "\x00-\x1F\x7F"
-      space   = " "
-      delims  = "<>#%\""
-      unwise  = '{}|\\\\^\[\]`'
-      query   = ";/?:@&=+,$"
-      URI.escape(url, /[#{control+space+delims+unwise+query}]/o)
-    end
-
     def self_or_new(entry)
       if entry.nil?
         nil

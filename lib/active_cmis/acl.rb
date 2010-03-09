@@ -118,9 +118,7 @@ module ActiveCMIS
 
     private
     def self_link(options = {})
-      uri = @self_link.dup
-      uri.query = [uri.query, *options.map {|key, value| "#{key}=#{value}"} ].compact.join "&"
-      uri
+      Internal::Utils.add_parameters(@self_link, options)
     end
 
     def conn
