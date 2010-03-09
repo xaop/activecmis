@@ -41,7 +41,7 @@ module ActiveCMIS
       def attributes(inherited = false)
         load_from_data unless defined?(@attributes)
         if inherited && superclass.respond_to?(:attributes)
-          superclass.attributes(inherited).merge(@attributes)
+          super.merge(@attributes)
         else
           @attributes
         end
