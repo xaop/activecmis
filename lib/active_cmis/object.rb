@@ -141,6 +141,33 @@ module ActiveCMIS
     end
     cache :parent_folders
 
+    def file(folder)
+      raise "Not supported" unless self.class.fileable
+      @original_parent_folders ||= parent_folders.dup
+      if repository.capabilities["MultiFiling"]
+        @parent_folders << folder
+      else
+        @parent_folders = [folder]
+      end
+    end
+
+    # FIXME: should throw exception if folder is not actually in @parent_folders?
+    def unfile(folder = nil)
+      raise "Not supported" unless self.class.fileable
+      @original_parent_folders ||= parent_folders.dup
+      if repository.capabilities["UnFiling"]
+        if folder.nil?
+          @parent_folders = []
+        else
+          @parent_folders.delete(folder)
+        end
+      elsif @parent_folders.length > 1
+        @parent_folders.delete(folder)
+      else
+        raise "Unfiling not supported by the repository"
+      end
+    end
+
     private
     def self_link(options = {})
       repository.object_by_id_url(options.merge("id" => id))
