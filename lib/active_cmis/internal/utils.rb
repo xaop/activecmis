@@ -28,5 +28,13 @@ module ActiveCMIS
     def self.percent_encode(string)
       URI.escape(string, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
     end
+
+    # Returns id if id is already an object, object_by_id if id is a string, nil otherwise
+    def self.string_or_id_to_object(id)
+      case id
+      when String; repository.object_by_id(id)
+      when ::ActiveCMIS::Object; id
+      end
+    end
   end
 end
