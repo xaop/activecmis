@@ -12,7 +12,7 @@ module ActiveCMIS
                      when "cmis:folder"
                        Folder
                      when "cmis:relationship"
-                       RelationShipt
+                       Relationship
                      when "cmis:policy"
                        Policy
                      else
