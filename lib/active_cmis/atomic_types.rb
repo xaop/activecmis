@@ -189,10 +189,13 @@ module ActiveCMIS
         value.text
       end
       def _rb2cmis(xml, value)
-        xml["c"].value( value.to_s )
+        case value
+        when ::ActiveCMIS::Object; value.id
+        else xml["c"].value( value.to_s )
+        end
       end
       def can_handle?(value)
-        value.respond_to?(:to_s)
+        value.class < ::ActiveCMIS::Object || value.respond_to?(:to_s)
       end
     end
 
