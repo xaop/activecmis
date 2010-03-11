@@ -61,12 +61,8 @@ module ActiveCMIS
     # Uses self to represent the version of this document
     def versions
       link = data.xpath("at:link[@rel = 'version-history']/@href", NS::COMBINED)
-      if link.first
-        feed = conn.get_xml(link.first.text)
-        entries = feed.xpath("at:feed/at:entry", NS::COMBINED)
-        entries.map do |entry|
-          self_or_new(entry)
-        end
+      if link = link.first
+        Collection.new(repository, link) # Problem: does not in fact use self
       else
         # The document is not versionable
         [self]
@@ -195,7 +191,7 @@ module ActiveCMIS
 
     def create_url
       if f = parent_folders.first
-        url = f.child_collection_url
+        url = f.items.url
         Internal::Utils.add_parameters(url, "versioningState" => "none") unless self.class.versionable # Necessary in OpenCMIS
       else
         raise "Operation not supported by CMIS"

@@ -201,10 +201,7 @@ module ActiveCMIS
       query = "at:link[@rel = 'up' and @type = 'application/atom+xml;type=%s']/@href"
       parent_feed = data.xpath(query % 'feed', NS::COMBINED)
       unless parent_feed.empty?
-        feed = conn.get_xml(parent_feed.to_s)
-        feed.xpath('at:feed/at:entry', NS::COMBINED).map do |e|
-          ActiveCMIS::Object.from_atom_entry(repository, e)
-        end
+        Collection.new(repository, parent_feed.to_s)
       else
         parent_entry = @data.xpath(query % 'entry', NS::COMBINED)
         unless parent_entry.empty?

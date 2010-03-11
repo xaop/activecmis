@@ -3,7 +3,7 @@ module ActiveCMIS
     private
     def create_url
       if f = parent_folders.first
-        f.child_collection_url
+        f.items.url
       else
         raise "not yet"
         # Policy collection of containing document?
