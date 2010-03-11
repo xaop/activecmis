@@ -52,7 +52,7 @@ module ActiveCMIS
         else
           href = data.xpath("app:collection[cra:collectionType[child::text() = '#{coll_name}']]/@href", NS::COMBINED)
           if href.first
-            result = Collection.new(conn, href.first)
+            result = Collection.new(self, href.first)
           else
             result = nil
           end
