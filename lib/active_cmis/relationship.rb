@@ -36,8 +36,7 @@ module ActiveCMIS
 
     private
     def create_url
-      raise "not yet"
-      # Resource collection of parent or child?
+      source.source_relations.url
     end
   end
 end

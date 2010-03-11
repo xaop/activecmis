@@ -151,6 +151,33 @@ module ActiveCMIS
     end
     cache :allowable_actions
 
+    # :section: Relationships
+    # FIXME: this needs to be Folder and Document only
+
+    def target_relations
+      query = "at:link[@rel = 'http://docs.oasis-open.org/ns/cmis/link/200908/relationships']/@href"
+      link = data.xpath(query, NS::COMBINED)
+      if link.length == 1
+        link = Internal::Utils.append_parameters(link.text, "relationshipDirection" => "target", "includeSubRelationshipTypes" => true)
+        Collection.new(repository, link)
+      else
+        raise "Expected exactly 1 relationships link for #{key}, got #{link.length}, are you sure this is a document/folder"
+      end
+    end
+    cache :target_relations
+
+    def source_relations
+      query = "at:link[@rel = 'http://docs.oasis-open.org/ns/cmis/link/200908/relationships']/@href"
+      link = data.xpath(query, NS::COMBINED)
+      if link.length == 1
+        link = Internal::Utils.append_parameters(link.text, "relationshipDirection" => "source", "includeSubRelationshipTypes" => true)
+        Collection.new(repository, link)
+      else
+        raise "Expected exactly 1 relationships link for #{key}, got #{link.length}, are you sure this is a document/folder"
+      end
+    end
+    cache :source_relations
+
     # :section: ACL
     # All 4 subtypes can have an acl
     def acl
