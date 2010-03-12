@@ -4,7 +4,7 @@ module ActiveCMIS
   # server_url and repository_id are required options
   #
   # server_login, server_password and server_auth can be used to authenticate against the server,
-  #   server_auth is optional and defaults to :basic
+  # server_auth is optional and defaults to :basic
   #
   # You can also authenticate to the repository, by replacing server_ with repository_, by default
   # the repository will use the same authentication parameters as the server

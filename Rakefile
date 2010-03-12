@@ -18,6 +18,8 @@ spec = Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'nokogiri', '>= 1.4.1'
 
+  s.rdoc_options << "--accessor" << "cache=cached"
+
   s.required_ruby_version = '>= 1.8.6'
   s.platform = Gem::Platform::RUBY
 end
