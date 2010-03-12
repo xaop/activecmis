@@ -10,6 +10,10 @@ module ActiveCMIS
         URI.escape(parameter, /[#{control+space+delims+unwise+query}]/o)
       end
 
+      # Given an url (string or URI) returns that url with the given parameters appended
+      #
+      # This method does not perform any encoding on the paramter or key values.
+      # This method does not check the existing parameters for duplication in keys
       def self.append_parameters(uri, parameters)
         uri       = case uri
                     when String; string = true; URI.parse(uri)
