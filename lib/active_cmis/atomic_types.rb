@@ -46,6 +46,8 @@ module ActiveCMIS
       def can_handle?(value)
         value.respond_to?(:to_s)
       end
+
+      private :_cmis2rb, :_rb2cmis
     end
 
     # Precision is ignored?
@@ -72,6 +74,8 @@ module ActiveCMIS
       def can_handle?(value)
         value.respond_to?(:to_s)
       end
+
+      private :_cmis2rb, :_rb2cmis
     end
 
     class Integer < CommonBase
@@ -97,6 +101,8 @@ module ActiveCMIS
       def can_handle?(value)
         value.respond_to?(:to_int)
       end
+
+      private :_cmis2rb, :_rb2cmis
     end
 
     class DateTime < CommonBase
@@ -132,6 +138,8 @@ module ActiveCMIS
       def can_handle?(value)
         value.respond_to?(:strftime)
       end
+
+      private :_cmis2rb, :_rb2cmis
     end
 
     class Singleton < CommonBase
@@ -162,6 +170,8 @@ module ActiveCMIS
       def can_handle?(value)
         [true, false].include?(value)
       end
+
+      private :_cmis2rb, :_rb2cmis
     end
 
     class URI < Singleton
@@ -178,6 +188,8 @@ module ActiveCMIS
       def can_handle?(value)
         value.respond_to?(:to_s)
       end
+
+      private :_cmis2rb, :_rb2cmis
     end
 
     class ID < Singleton
@@ -197,6 +209,8 @@ module ActiveCMIS
       def can_handle?(value)
         value.class < ::ActiveCMIS::Object || value.respond_to?(:to_s)
       end
+
+      private :_cmis2rb, :_rb2cmis
     end
 
     class HTML < Singleton
@@ -214,6 +228,8 @@ module ActiveCMIS
       def can_handle?(value)
         true # FIXME: this is probably incorrect
       end
+
+      private :_cmis2rb, :_rb2cmis
     end
   end
 end
