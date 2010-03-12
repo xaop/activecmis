@@ -61,6 +61,16 @@ module ActiveCMIS
       end
     end
 
+    def changes
+      @changes ||= begin
+                     query = "at:link[@rel = 'http://docs.oasis-open.org/ns/cmis/link/200908/changes']/@href"
+                     link = data.xpath(query, NS::COMBINED)
+                     if link = link.first
+                       Collection.new(self, link.to_s)
+                     end
+                   end
+    end
+
     def root_folder
       @root_folder ||= object_by_id(data.xpath("cra:repositoryInfo/c:rootFolderId", NS::COMBINED).text)
     end
