@@ -114,19 +114,20 @@ module ActiveCMIS
         body = builder.to_xml
 
         # Keep link to current parent_folders for linking afterwards
-        all_folders = parent_folders
+        all_folders = parent_folders.to_a
 
         url = create_url
         response = conn.post(create_url, body, "Content-Type" => "application/xmiatom+xml;type=entry")
         # XXX: Currently ignoring Location header in response
 
         reload
-        @data = Nokogiri::XML::parse(response) # Assume that a response indicates success?
+        @data = Nokogiri::XML::parse(response).xpath("at:entry", NS::COMBINED) # Assume that a response indicates success?
         @key  = attribute("cmis:objectId")
 
-        unless (extra_folders = all_folders - parent_folders).empty?
+        # to_a needed because parent_folders can be a Collection
+        unless (extra_folders = all_folders - parent_folders.to_a).empty?
           extra_folders.each do |f|
-            link(f)
+            file(f)
           end
           save
         end
