@@ -117,7 +117,7 @@ module ActiveCMIS
                       return nil unless @next
                       xml = conn.get_xml(@next)
 
-                      @next = xml.xpath("at:link[@rel = 'next']", NS::COMBINED).first
+                      @next = xml.xpath("at:feed/at:link[@rel = 'next']/@href", NS::COMBINED).first
                       @next = @next.nil? ? nil : @next.text
 
                       new_elements = xml.xpath('at:feed/at:entry', NS::COMBINED).map do |e|
@@ -125,7 +125,7 @@ module ActiveCMIS
                       end
                       @elements.concat(new_elements)
 
-                      num_items = xml.xpath("cra:numItems", NS::COMBINED).first
+                      num_items = xml.xpath("at:feed/cra:numItems", NS::COMBINED).first
                       @length ||= num_items.text.to_i if num_items # We could also test on the repository
 
                       xml
