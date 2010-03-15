@@ -61,14 +61,26 @@ module ActiveCMIS
       end
     end
 
-    def changes
-      @changes ||= begin
-                     query = "at:link[@rel = 'http://docs.oasis-open.org/ns/cmis/link/200908/changes']/@href"
-                     link = data.xpath(query, NS::COMBINED)
-                     if link = link.first
-                       Collection.new(self, link.to_s)
-                     end
-                   end
+    # Returns a collection with the changes since the given changeLogToken.
+    #
+    # Completely uncached
+    #
+    # Parameters: a Hash containing parameters, valid keys are:
+    # - filter
+    # - changeLogToken
+    # - maxItems
+    # - includeACL
+    # - includePolicyIds
+    # - includeProperties
+    #
+    # All parameters are optional
+    def changes(parameters = {})
+      query = "at:link[@rel = 'http://docs.oasis-open.org/ns/cmis/link/200908/changes']/@href"
+      link = data.xpath(query, NS::COMBINED)
+      if link = link.first
+        link = Internal::Utils.append_parameters(link.to_s, parameters)
+        Collection.new(self, link)
+      end
     end
 
     def root_folder
