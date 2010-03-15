@@ -67,6 +67,15 @@ module ActiveCMIS
     end
     alias slice []
 
+    def first
+      at(0)
+    end
+
+    # Warning: this is inefficiënt at the moment
+    def last
+      at(-1)
+    end
+
     def each
       length.times { |i| yield self[i] }
     end
