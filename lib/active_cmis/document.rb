@@ -192,9 +192,9 @@ module ActiveCMIS
     def create_url
       if f = parent_folders.first
         url = f.items.url
-        Internal::Utils.add_parameters(url, "versioningState" => "none") unless self.class.versionable # Necessary in OpenCMIS
+        Internal::Utils.append_parameters(url, "versioningState" => "none") unless self.class.versionable # Necessary in OpenCMIS
       else
-        raise "Operation not supported by CMIS"
+        raise "Creating an unfiled document is not supported by CMIS"
         # Can't create documents that are unfiled
       end
     end
