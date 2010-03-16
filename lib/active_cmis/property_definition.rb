@@ -114,7 +114,7 @@ module ActiveCMIS
       elsif repeating != (Array === value)
         raise "You are ignoring the cardinality for an attribute (#{self})"
       else
-        if repeating && z = value.detect? {|v| !property_type.can_handle?(v)}
+        if repeating && z = value.detect {|v| !property_type.can_handle?(v)}
           raise "Can't assign attribute with type #{z.class} to attribute with type #{property_type}"
         elsif !repeating && !property_type.can_handle?(value)
           raise "Can't assign attribute with type #{value.class} to attribute with type #{property_type}"
