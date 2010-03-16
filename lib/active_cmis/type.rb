@@ -52,10 +52,9 @@ module ActiveCMIS
         attributes(true).reject {|key, value| !value.required}
       end
 
-      alias imported_reload reload
       def reload
         remove_instance_variable(:@attributes) if defined? @attributes
-        imported_reload
+        [:attributes] + __reload # Could also do if defined?(super) then super else __reload end, but we don't do anything but remove_instance_variable @attributes in superclasses anyway
       end
 
       def inspect

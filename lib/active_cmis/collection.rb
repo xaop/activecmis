@@ -105,9 +105,9 @@ module ActiveCMIS
     end
 
     def reload
-      super
       @pages = []
       @elements = []
+      __reload
     end
 
     private

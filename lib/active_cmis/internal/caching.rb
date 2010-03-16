@@ -40,7 +40,7 @@ module ActiveCMIS
 
         def reloadable
           class_eval <<-RUBY, __FILE__, __LINE__
-            def reload
+            def __reload
               #{@cached_methods.inspect}.map do |method|
                 :"@\#{method}"
               end.select do |iv|
@@ -49,7 +49,15 @@ module ActiveCMIS
                 remove_instance_variable iv
               end + (defined?(super) ? super : [])
             end
+            private :__reload
           RUBY
+          unless instance_methods.include? "reload"
+            class_eval <<-RUBY, __FILE__, __LINE__
+              def reload
+                __reload
+              end
+            RUBY
+          end
         end
       end
     end
