@@ -372,13 +372,6 @@ module ActiveCMIS
         {}
       end
 
-      # This does not actually reload the type definition, but clears all cached values
-      # This means reloading is fast, but accessing after the first load will be slow
-      def reload
-        # Note: reloading of Object does do nothing, simply because there is nothing repository specific
-        []
-      end
-
       def key
         raise NotImplementedError
       end
