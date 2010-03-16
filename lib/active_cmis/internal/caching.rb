@@ -10,13 +10,20 @@ module ActiveCMIS
           (@cached_methods ||= []).concat(names).uniq!
           names.each do |name|
             alias_method("#{name}__uncached", name)
-            class_eval <<-RUBY, __FILE__, __LINE__
+            class_eval <<-RUBY, __FILE__, __LINE__+1
+              if private_method_defined? :"#{name}"
+                private_method = true
+              end
               def #{name}(*a, &b)
                 if defined? @#{name}
                   @#{name}
                 else
                   @#{name} = #{name}__uncached(*a, &b)
                 end
+              end
+              if private_method
+                private :"#{name}__uncached"
+                private :"#{name}"
               end
             RUBY
           end
