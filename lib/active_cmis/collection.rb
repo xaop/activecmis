@@ -107,6 +107,8 @@ module ActiveCMIS
     def reload
       @pages = []
       @elements = []
+      # FIXME: return [:pages, :elements] + __reload? but pages and elements are internal
+      @next = @url
       __reload
     end
 
