@@ -114,7 +114,7 @@ module ActiveCMIS
         @key  = attribute("cmis:objectId")
 
         # to_a needed because parent_folders can be a Collection
-        unless (extra_folders = all_folders - parent_folders.to_a).empty?
+        unless (extra_folders = all_folders.map {|o| o.id} - parent_folders.map {|o| o.id}).empty?
           extra_folders.each do |f|
             file(f)
           end
