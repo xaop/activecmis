@@ -20,6 +20,8 @@ module ActiveCMIS
         @parent_folders = [] # start unlinked
       else
         @key = parameters["id"] || attribute('cmis:objectId')
+        @self_link = data.xpath("at:link[@rel = 'self']/@href", NS::COMBINED).first
+        @self_link = @self_link.text
       end
       @used_parameters = parameters
       # FIXME: decide? parameters to use?? always same ? or parameter with reload ?
@@ -120,8 +122,11 @@ module ActiveCMIS
         response = conn.post(create_url, body, "Content-Type" => "application/xmiatom+xml;type=entry")
         # XXX: Currently ignoring Location header in response
 
+        response_data = Nokogiri::XML::parse(response).xpath("at:entry", NS::COMBINED) # Assume that a response indicates success?
+
+        @self_link = response_data.xpath("at:link[@rel = 'self']/@href", NS::COMBINED).first
+        @self_link = @self_link.text
         reload
-        @data = Nokogiri::XML::parse(response).xpath("at:entry", NS::COMBINED) # Assume that a response indicates success?
         @key  = attribute("cmis:objectId")
 
         # to_a needed because parent_folders can be a Collection
@@ -242,9 +247,23 @@ module ActiveCMIS
       end
     end
 
+    def reload
+      if @self_link.nil?
+        raise "Can't reload unsaved object"
+      else
+        __reload
+      end
+    end
+
     private
     def self_link(options = {})
-      repository.object_by_id_url(options.merge("id" => id))
+      url = @self_link
+      if options.empty?
+        url
+      else
+        Internal::Utils.append_parameters(url, options)
+      end
+      #repository.object_by_id_url(options.merge("id" => id))
     end
 
     def data
