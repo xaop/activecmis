@@ -94,26 +94,10 @@ module ActiveCMIS
           raise "Not all required attributes are filled in"
         end
 
-        # FIXME: remove redundancy with put?
-        builder = Nokogiri::XML::Builder.new do |xml|
-          xml.entry(NS::COMBINED) do
-            xml.parent.namespace = xml.parent.namespace_definitions.detect {|ns| ns.prefix == "at"}
-            xml["at"].author do
-              xml["at"].name conn.user # FIXME: find reliable way to set author?
-            end
-            xml["at"].id_ do xml.text "blah" end
-            xml["cra"].object do
-              xml["c"].properties do
-                self.class.attributes.each do |key, definition|
-                  if updated_attributes.include?(key) || definition.required
-                    definition.render_property(xml, attributes[key])
-                  end
-                end
-              end
-            end
-          end
+        properties = self.class.attributes.reject do |key, definition|
+          !updated_attributes.include?(key) && !definition.required
         end
-        body = builder.to_xml
+        body = render_atom_entry(properties)
 
         # Keep link to current parent_folders for linking afterwards
         all_folders = parent_folders.to_a
@@ -291,6 +275,25 @@ module ActiveCMIS
       end
     end
 
+    def render_atom_entry(properties = self.class.attributes)
+      builder = Nokogiri::XML::Builder.new do |xml|
+        xml.entry(NS::COMBINED) do
+          xml.parent.namespace = xml.parent.namespace_definitions.detect {|ns| ns.prefix == "at"}
+          xml["at"].author do
+            xml["at"].name conn.user # FIXME: find reliable way to set author?
+          end
+          xml["cra"].object do
+            xml["c"].properties do
+              properties.each do |key, definition|
+                definition.render_property(xml, attributes[key])
+              end
+            end
+          end
+        end
+      end
+      builder.to_xml
+    end
+
     attr_writer :updated_attributes
     def put(checkin, major, checkin_comment)
       specified_attributes = []
@@ -300,26 +303,16 @@ module ActiveCMIS
         end
         body = nil
       else
-        builder = Nokogiri::XML::Builder.new do |xml|
-          xml.entry(NS::COMBINED) do
-            xml.parent.namespace = xml.parent.namespace_definitions.detect {|ns| ns.prefix == "at"}
-            xml["at"].author do
-              xml["at"].name conn.user # FIXME: find reliable way to set author?
-            end
-            xml["cra"].object do
-              xml["c"].properties do
-                self.class.attributes.each do |key, definition|
-                  next if definition.updatability == "oncreate" && attribute("cmis:objectId")
-                  if updated_attributes.include?(key) || definition.required
-                    definition.render_property(xml, attributes[key])
-                    specified_attributes << key
-                  end
-                end
-              end
-            end
+        properties = self.class.attributes.reject do |key, definition|
+          next true if definition.updatability == "oncreate" && attribute("cmis:objectId")
+          if updated_attributes.include?(key) || definition.required
+            specified_attributes << key
+            false
+          else
+            true
           end
         end
-        body = builder.to_xml
+        body = render_atom_entry(properties)
       end
       unless nonexistent_attributes = (updated_attributes - specified_attributes).empty?
         raise "You updated attributes (#{nonexistent_attributes.join ','}) that are not defined in the type #{self.class.key}"
