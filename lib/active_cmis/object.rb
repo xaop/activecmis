@@ -236,6 +236,8 @@ module ActiveCMIS
         raise "Can't reload unsaved object"
       else
         __reload
+        @updated_attributes = []
+        @original_parent_folders = nil
       end
     end
 
