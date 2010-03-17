@@ -87,45 +87,14 @@ module ActiveCMIS
       self.attributes.merge!(attributes)
     end
 
+    # WARNING: because of the way CMIS is constructed the save operation is not atomic if updates happen to different aspects of the object
+    # (parent folders, attributes, content stream, acl), we can't work around this because there is no transaction in CMIS either
     def save
-      if @key.nil?
-        # Are all required attributes filled in?
-        if self.class.required_attributes.any? {|a, _| attribute(a).nil? }
-          raise "Not all required attributes are filled in"
-        end
-
-        properties = self.class.attributes.reject do |key, definition|
-          !updated_attributes.include?(key) && !definition.required
-        end
-        body = render_atom_entry(properties)
-
-        # Keep link to current parent_folders for linking afterwards
-        all_folders = parent_folders.to_a
-
-        url = create_url
-        response = conn.post(create_url, body, "Content-Type" => "application/xmiatom+xml;type=entry")
-        # XXX: Currently ignoring Location header in response
-
-        response_data = Nokogiri::XML::parse(response).xpath("at:entry", NS::COMBINED) # Assume that a response indicates success?
-
-        @self_link = response_data.xpath("at:link[@rel = 'self']/@href", NS::COMBINED).first
-        @self_link = @self_link.text
-        reload
-        @key  = attribute("cmis:objectId")
-
-        # to_a needed because parent_folders can be a Collection
-        unless (extra_folders = all_folders.map {|o| o.id} - parent_folders.map {|o| o.id}).empty?
-          extra_folders.each do |f|
-            file(f)
-          end
-          save
-        end
-
-        self
-      else
-        # TODO: implement updating linking when saving ordinarily
-        response = put(false, nil, nil)
+      # FIXME: find a way to handle errors?
+      updated_aspects.each do |hash|
+        send(hash[:message], *hash[:parameters])
       end
+      self
     end
 
     def allowable_actions
@@ -277,7 +246,10 @@ module ActiveCMIS
       end
     end
 
-    def render_atom_entry(properties = self.class.attributes)
+    # Optional parameters:
+    #   - properties: a hash key/definition pairs of properties to be rendered (defaults to all attributes)
+    #   - attributes: a hash key/value pairs used to determine the values rendered (defaults to self.attributes)
+    def render_atom_entry(properties = self.class.attributes, attributes = self.attributes)
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.entry(NS::COMBINED) do
           xml.parent.namespace = xml.parent.namespace_definitions.detect {|ns| ns.prefix == "at"}
@@ -297,46 +269,139 @@ module ActiveCMIS
     end
 
     attr_writer :updated_attributes
-    def put(checkin, major, checkin_comment)
-      specified_attributes = []
-      if updated_attributes.empty?
-        if !checkin
-          return self
+    def updated_aspects(checkin = nil)
+      result = []
+
+      if key.nil?
+        result << {:message => :save_new_object, :parameters => []}
+        if parent_folders.length > 1
+          # We started from 0 folders, we already added the first when creating the document
+
+          # Note: to keep a save operation at least somewhat atomic this might be better done  in save_new_object
+          result << {:message => :save_folders, :parameters => [parent_folders]}
         end
-        body = nil
       else
-        properties = self.class.attributes.reject do |key, definition|
-          next true if definition.updatability == "oncreate" && attribute("cmis:objectId")
-          if updated_attributes.include?(key) || definition.required
-            specified_attributes << key
-            false
-          else
-            true
+        if !updated_attributes.empty?
+          result << {:message => :save_attributes, :parameters => [updated_attributes, attributes, checkin]}
+        end
+        if @original_parent_folders
+          result << {:message => :save_folders, :parameters => [parent_folders, checkin && !updated_attributes]}
+        end
+      end
+      if acl && acl.updated # We need to be able to do this for newly created documents and merge the two
+        result << {:message => :save_acl, :parameters => [acl]}
+      end
+
+      if result.empty? && checkin
+        # NOTE: this needs some thinking through: in particular this may not work well if there would be an updated content stream
+        result << {:message => :save_attributes, :parameters => [[], [], checkin]}
+      end
+
+      result
+    end
+
+    def save_new_object
+      if self.class.required_attributes.any? {|a, _| attribute(a).nil? }
+        raise "Not all required attributes are filled in"
+      end
+
+      properties = self.class.attributes.reject do |key, definition|
+        !updated_attributes.include?(key) && !definition.required
+      end
+      body = render_atom_entry(properties)
+
+      url = create_url
+      response = conn.post(create_url, body, "Content-Type" => "application/atom+xml;type=entry")
+      # XXX: Currently ignoring Location header in response
+
+      response_data = Nokogiri::XML::parse(response).xpath("at:entry", NS::COMBINED) # Assume that a response indicates success?
+
+      @self_link = response_data.xpath("at:link[@rel = 'self']/@href", NS::COMBINED).first
+      @self_link = @self_link.text
+      reload
+      @key  = attribute("cmis:objectId")
+
+      self
+    end
+
+    def save_attributes(attributes, values, checkin = nil)
+      if attributes.empty? && checkin.nil?
+        raise "Error: saving attributes but nothing to do"
+      end
+      properties = self.class.attributes.reject {|key,_| !attributes.include?(key)}
+      body = render_atom_entry(properties, values)
+
+      if checkin.nil?
+        parameters = {}
+      else
+        checkin, major, comment = *checkin
+        parameters = {"checkin" => checkin}
+        if checkin
+          parameters.merge! "major" => !!major, "checkin_comment" => Internal::Utils.escape_url_parameter(comment)
+
+          if properties.empty?
+            body = nil
           end
         end
-        body = render_atom_entry(properties)
-      end
-      unless nonexistent_attributes = (updated_attributes - specified_attributes).empty?
-        raise "You updated attributes (#{nonexistent_attributes.join ','}) that are not defined in the type #{self.class.key}"
-      end
-      parameters = {"checkin" => !!checkin}
-      if checkin
-        parameters.merge! "major" => !!major, "checkin_comment" => Internal::Utils.escape_url_parameter(checkin_comment)
       end
       if ct = attribute("cmis:changeToken")
         parameters.merge! "changeToken" => Internal::Utils.escape_url_parameter(ct)
       end
+
       uri = self_link(parameters)
       response = conn.put(uri, body)
-      updated_attributes.clear
+
       data = Nokogiri::XML.parse(response).xpath("at:entry", NS::COMBINED)
       if data.xpath("cra:object/c:properties/c:propertyId[@propertyDefinitionId = 'cmis:objectId']/c:value", NS::COMBINED).text == id
         reload
         @data = data
         self
       else
+        reload # Updated attributes should be forgotten here
         ActiveCMIS::Object.from_atom_entry(repository, data)
       end
+    end
+
+    def save_folders(requested_parent_folders, checkin = nil)
+      current = parent_folders.to_a
+      future  = requested_parent_folders.to_a
+
+      common_folders = future.map {|f| f.id}.select {|id| current.any? {|f| f.id == id } }
+
+      added  = future.select {|f1| current.all? {|f2| f1.id != f2.id } }
+      removed = current.select {|f1| future.all? {|f2| f1.id != f2.id } }
+
+      # NOTE: an absent atom:content is important here according to the spec, for the moment I did not suffer from this
+      body = render_atom_entry("cmis:objectId" => self.class.attributes["cmis:objectId"])
+
+      if added.empty?
+        removed.each do |folder|
+          url = repository.unfiled.url
+          url = Internal::Utils.append_parameters(url, "removeFrom" => Internal::Utils.escape_url_parameter(removed.id))
+          conn.post(url, body, "Content-Type" => "application/atom+xml;type=entry")
+        end
+      elsif removed.empty?
+        added.each do |folder|
+          conn.post(folder.items.url, body, "Content-Type" => "application/atom+xml;type=entry")
+        end
+      else
+        removed.zip(added) do |r, a|
+          url = a.items.url
+          url = Internal::Utils.append_parameters(url, "sourceFolderId" => Internal::Utils.escape_url_parameter(r.id))
+          conn.post(url, body, "Content-Type" => "application/atom+xml;type=entry")
+        end
+        if extra = added[removed.length..-1]
+          extra.each do |folder|
+            conn.post(folder.items.url, body, "Content-Type" => "application/atom+xml;type=entry")
+          end
+        end
+      end
+    end
+
+    def save_acl(acl)
+      acl.save
+      reload
+      self
     end
 
     class << self

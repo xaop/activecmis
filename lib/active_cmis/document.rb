@@ -171,14 +171,31 @@ module ActiveCMIS
     #
     # This operation exists only for Private Working Copies
     # If the operation succeeds this object becomes the latest in the version series
-    def checkin(major = true, updated_attributes = {}, checkin_comment = "")
-      self.updated_attributes.merge(updated_attributes.keys)
-      self.attributes.merge(updated_attributes)
-      response = put(true, major, checkin_comment)
-      # Check response body for updated object id and updated location header
+    def checkin(major = true, updated_attributes = {}, comment = "")
+      if working_copy?
+        update(updated_attributes)
+        updated_aspects([true, major, comment]).each do |message, params|
+          send(message, *params)
+        end
+        self
+      else
+        raise "Not a working copy"
+      end
     end
 
     private
+
+    def updated_aspects(*params)
+      result = super
+
+      # Only for certain objects
+      if false# content_stream_updated
+        result << {:message => :save_content_stream, :parameters => [updated_content_stream]}
+      end
+
+      result
+    end
+
     def self_or_new(entry)
       if entry.nil?
         nil
@@ -197,6 +214,11 @@ module ActiveCMIS
         raise "Creating an unfiled document is not supported by CMIS"
         # Can't create documents that are unfiled
       end
+    end
+
+    def save_content_stream(stream)
+      # ??
+      self
     end
   end
 end
