@@ -163,7 +163,11 @@ module ActiveCMIS
 
     # This action may not be permitted (query allowable_actions to see whether it is permitted)
     def cancel_checkout
-      conn.delete(self_link)
+      if working_copy?
+        conn.delete(self_link)
+      else
+        raise "Not a working copy"
+      end
     end
 
     # You can specify whether the new version should be major (defaults to true)
