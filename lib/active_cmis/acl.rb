@@ -76,6 +76,7 @@ module ActiveCMIS
         new_permissions.concat(relevant.permissions)
       end
 
+      @updated = true
       permissions << AclEntry.new(principal, new_permissions, true)
     end
 
@@ -88,16 +89,18 @@ module ActiveCMIS
       relevant = permissions.select {|p| p.principal == principal && p.permissions.any? {|t| new_permissions.include? t} }
       changed  = relevant.map {|p| AclEntry.new(principal, p.permissions - new_permissions, p.direct?) }
 
+      @updated = true
       @permissions = keep + changed
     end
 
     # Note: it is untested how this works together with direct == false
     def revoke_all_permissions(user)
       principal = convert_principal(user)
+      @updated = true
       permissions.reject! {|p| p.principal == principal}
     end
 
-    # Needed to actually execute changes on the server
+    # Needed to actually execute changes on the server, this method is also executed when you save an object with a modified ACL
     def apply
       body = Nokogiri::XML::Builder.new do |xml|
         xml.acl("xmlns" => NS::CMIS_CORE) do
@@ -114,6 +117,15 @@ module ActiveCMIS
       end
       conn.put(self_link("onlyBasicPermissions" => false), body)
       reload
+    end
+
+    def updated
+      @updated
+    end
+
+    def reload
+      @updated = false
+      __reload
     end
 
     private
