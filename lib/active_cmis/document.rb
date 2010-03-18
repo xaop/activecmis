@@ -175,13 +175,14 @@ module ActiveCMIS
     #
     # This operation exists only for Private Working Copies
     # If the operation succeeds this object becomes the latest in the version series
-    def checkin(major = true, updated_attributes = {}, comment = "")
+    def checkin(major = true, comment = "", updated_attributes = {})
       if working_copy?
         update(updated_attributes)
+        result = self
         updated_aspects([true, major, comment]).each do |message, params|
-          send(message, *params)
+          result = result.send(message, *params)
         end
-        self
+        result
       else
         raise "Not a working copy"
       end

@@ -91,10 +91,12 @@ module ActiveCMIS
     # (parent folders, attributes, content stream, acl), we can't work around this because there is no transaction in CMIS either
     def save
       # FIXME: find a way to handle errors?
+      # FIXME: what if multiple objects are created in the course of a save operation?
+      result = self
       updated_aspects.each do |hash|
-        send(hash[:message], *hash[:parameters])
+        result = result.send(hash[:message], *hash[:parameters])
       end
-      self
+      result
     end
 
     def allowable_actions
@@ -344,6 +346,8 @@ module ActiveCMIS
           end
         end
       end
+
+      # NOTE: Spec says Entity Tag should be used for changeTokens, that does not seem to work
       if ct = attribute("cmis:changeToken")
         parameters.merge! "changeToken" => Internal::Utils.escape_url_parameter(ct)
       end
@@ -374,6 +378,8 @@ module ActiveCMIS
       # NOTE: an absent atom:content is important here according to the spec, for the moment I did not suffer from this
       body = render_atom_entry("cmis:objectId" => self.class.attributes["cmis:objectId"])
 
+      # Note: change token does not seem to matter here
+      # FIXME: currently we assume the data returned by post is not important, I'm not sure that this is always true
       if added.empty?
         removed.each do |folder|
           url = repository.unfiled.url
@@ -396,6 +402,8 @@ module ActiveCMIS
           end
         end
       end
+
+      self
     end
 
     def save_acl(acl)
