@@ -1,6 +1,3 @@
-#require 'active_cmis/documents'
-#require 'active_cmis/relationships'
-#require 'active_cmis/policies'
 require 'nokogiri'
 require 'net/http'
 require 'net/https'
