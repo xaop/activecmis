@@ -27,6 +27,15 @@ module ActiveCMIS
         @conn = param_conn
         @data = klass_data
         @self_link = klass_data.xpath("at:link[@rel = 'self']/@href", NS::COMBINED).text
+
+        def initialize(rep = nil, data = nil, parameters = {})
+          unless rep.nil?
+            if rep != self.class.repository
+              raise "Trying to create element in different repository than type"
+            end
+          end
+          super(rep || self.class.repository, data, parameters)
+        end
       end
       klass
     end
