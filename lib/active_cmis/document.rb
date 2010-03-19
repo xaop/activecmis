@@ -159,6 +159,8 @@ module ActiveCMIS
       end
       body = builder.to_xml
       response = conn.post(repository.checkedout.url, body)
+      entry = Nokogiri::XML.parse(response).xpath("/at:entry", NS::COMBINED)
+      self_or_new(entry)
     end
 
     # This action may not be permitted (query allowable_actions to see whether it is permitted)
