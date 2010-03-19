@@ -181,8 +181,8 @@ module ActiveCMIS
       if working_copy?
         update(updated_attributes)
         result = self
-        updated_aspects([true, major, comment]).each do |message, params|
-          result = result.send(message, *params)
+        updated_aspects([true, major, comment]).each do |hash|
+          result = result.send(hash[:message], *hash[:parameters])
         end
         result
       else
