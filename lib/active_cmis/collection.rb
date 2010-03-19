@@ -5,13 +5,18 @@ module ActiveCMIS
 
     attr_reader :repository, :url
 
-    def initialize(repository, url)
+    def initialize(repository, url, &map_entry)
       @repository = repository
       @url = URI.parse(url)
 
       @next = @url
       @elements = []
       @pages = []
+
+      @map_entry = map_entry || Proc.new do |e|
+        ActiveCMIS::Object.from_atom_entry(repository, e)
+      end
+
     end
 
     def length
@@ -132,9 +137,7 @@ module ActiveCMIS
                       @next = xml.xpath("at:feed/at:link[@rel = 'next']/@href", NS::COMBINED).first
                       @next = @next.nil? ? nil : @next.text
 
-                      new_elements = xml.xpath('at:feed/at:entry', NS::COMBINED).map do |e|
-                        ActiveCMIS::Object.from_atom_entry(repository, e)
-                      end
+                      new_elements = xml.xpath('at:feed/at:entry', NS::COMBINED).map &@map_entry
                       @elements.concat(new_elements)
 
                       num_items = xml.xpath("at:feed/cra:numItems", NS::COMBINED).first
