@@ -65,6 +65,22 @@ module ActiveCMIS
         @key ||= data.xpath("cra:type/c:id", NS::COMBINED).text
       end
 
+      def subtypes
+        url = data.xpath("at:link[@rel = 'down' and @type='application/atom+xml;type=feed']/@href", NS::COMBINED).first.to_s
+        Collection.new(repository, url) do |entry|
+          id = entry.xpath("cra:type/c:id", NS::COMBINED).text
+          repository.type_by_id id
+        end
+      end
+      cache :subtypes
+
+      def all_subtypes
+        subtypes.map do |t|
+          t.all_subtypes
+        end.flatten << self
+      end
+      cache :all_subtypes
+
       private
       attr_reader :self_link, :conn
       def data

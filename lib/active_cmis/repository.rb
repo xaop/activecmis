@@ -44,7 +44,7 @@ module ActiveCMIS
       end
     end
 
-    %w[root query checkedout unfiled types].each do |coll_name|
+    %w[root query checkedout unfiled].each do |coll_name|
       define_method coll_name do
         iv = :"@#{coll_name}"
         if instance_variable_defined?(iv)
@@ -59,6 +59,28 @@ module ActiveCMIS
           instance_variable_set(iv, result)
         end
       end
+    end
+
+    def base_types
+      @base_types ||= begin
+                        query = "app:collection[cra:collectionType[child::text() = 'types']]/@href"
+                        href = data.xpath(query, NS::COMBINED)
+                        if href.first
+                          url = href.first.text
+                          Collection.new(self, url) do |entry|
+                            id = entry.xpath("cra:type/c:id", NS::COMBINED).text
+                            type_by_id id
+                          end
+                        else
+                          raise "Repository has no types collection, this is strange and wrong"
+                        end
+                      end
+    end
+
+    def types
+      @types ||= base_types.map do |t|
+        t.all_subtypes
+      end.flatten
     end
 
     # Returns a collection with the changes since the given changeLogToken.
