@@ -339,7 +339,7 @@ module ActiveCMIS
         checkin, major, comment = *checkin
         parameters = {"checkin" => checkin}
         if checkin
-          parameters.merge! "major" => !!major, "checkin_comment" => Internal::Utils.escape_url_parameter(comment)
+          parameters.merge! "major" => !!major, "checkinComment" => Internal::Utils.escape_url_parameter(comment)
 
           if properties.empty?
             body = nil
