@@ -142,22 +142,7 @@ module ActiveCMIS
     # The content stream of the PWC may be identical to that of the document
     # that was checked out, or it may be unset.
     def checkout
-      builder = Nokogiri::XML::Builder.new do |xml|
-        xml.entry(NS::COMBINED) {
-          xml.parent.namespace = xml.parent.namespace_definitions.detect {|ns| ns.prefix == "at"}
-          xml["at"].author {
-            xml["at"].name conn.user # FIXME: find reliable way to set author?
-          }
-          xml["cra"].object {
-            xml["c"].properties {
-              xml["c"].propertyId("propertyDefinitionId" => "cmis:objectId") {
-                xml["c"].value id
-              }
-            }
-          }
-        }
-      end
-      body = builder.to_xml
+      body = render_atom_entry(self.class.attributes.reject {|k,v| k != "cmis:objectId"})
       response = conn.post(repository.checkedout.url, body)
       entry = Nokogiri::XML.parse(response).xpath("/at:entry", NS::COMBINED)
       self_or_new(entry)
