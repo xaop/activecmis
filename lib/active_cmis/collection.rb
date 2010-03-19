@@ -43,6 +43,7 @@ module ActiveCMIS
     end
 
     def at(index)
+      index = sanitize_index(index)
       if index < @elements.length
         @elements[index]
       elsif index > length
