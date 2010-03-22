@@ -9,6 +9,11 @@ module ActiveCMIS
   # You can also authenticate to the repository, by replacing server_ with repository_, by default
   # the repository will use the same authentication parameters as the server
   #
+  # The amoung of logging can be configured by setting log_level (default WARN), this can be done either
+  # by naming a Logger::Severity constant or the equivalent integer
+  #
+  # The destination of the logger output can be set with log_file (default STDOUT), (should not contain ~)
+  #
   # Default locations for the config file are: ./cmis.yml and .cmis.yml in that order
   def self.load_config(config_name, file = nil)
     if file.nil?
@@ -28,12 +33,25 @@ module ActiveCMIS
     if config.is_a? Hash
       config = config[config_name]
       if config.is_a? Hash
+        if config.has_key? "log_file"
+          logger = Logger.new(config["trace_file"])
+        else
+          logger = Logger.new(STDOUT)
+        end
+        if config.has_key? "log_level"
+          logger.level = Logger.const_get(config["trace_level"].upcase) rescue config["trace_level"].to_i
+        else
+          logger.level = Logger::WARN
+        end
+
         server = Server.new(config["server_url"])
+        server.logger = logger
         if user_name = config["server_login"] and password = config["server_password"]
           auth_type = config["server_auth"] || :basic
           server.authenticate(auth_type, user_name, password)
         end
         repository = server.repository(config["repository_id"])
+        repository.logger = logger
         if user_name = config["repository_login"] and password = config["repository_password"]
           auth_type = config["repository_auth"] || :basic
           repository.authenticate(auth_type, user_name, password)

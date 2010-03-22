@@ -23,6 +23,11 @@ module ActiveCMIS
       @endpoint = endpoint
     end
 
+    def logger=(logger)
+      @logger = logger
+      conn.logger = logger
+    end
+
     # Use authentication to access the CMIS repository
     #
     # e.g.: repo.authenticate(:basic, "username", "password")

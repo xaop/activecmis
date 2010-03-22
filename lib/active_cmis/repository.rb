@@ -1,5 +1,7 @@
 module ActiveCMIS
   class Repository
+    attr_accessor :logger
+
     def initialize(connection, initial_data) #:nodoc:
       @conn = connection
       @data = initial_data

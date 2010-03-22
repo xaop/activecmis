@@ -48,7 +48,7 @@ module ActiveCMIS
           if type_params.empty?
             regex = /#{type_main}/
           else
-            parameters = type_params.map {|k,v| "#{Regexp.escape(k)}=#{Regexp.escape(v)}" }.join (";\s*")
+            parameters = type_params.map {|k,v| "#{Regexp.escape(k)}=#{Regexp.escape(v)}" }.join(";\s*")
             regex = /#{type_main};\s*#{parameters}/
           end
           links = links.select do |node|

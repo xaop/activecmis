@@ -2,6 +2,8 @@ module ActiveCMIS
   module Internal
     class Connection
       attr_reader :user
+      attr_accessor :logger # Don't write to it if you aren't human or reading the users configuration
+
       def authenticate(method, *params)
         case method
         when :basic
@@ -22,13 +24,13 @@ module ActiveCMIS
 
       # Does not throw errors, returns the full response (includes status code and headers)
       def get_response(url)
-        puts "#{Time.now} GET (response) #{url}"
+        logger.debug "GET (response) #{url}"
         uri = normalize_url(url)
 
         req = Net::HTTP::Get.new(uri.request_uri)
         http = authenticate_request(uri, req)
         response = http.request(req)
-        puts "#{Time.now} GOT (#{response.code}) #{url}"
+        logger.debug "GOT (#{response.code}) #{url}"
         response
       end
 
@@ -61,7 +63,7 @@ module ActiveCMIS
 
       # Does not throw errors, returns the full response (includes status code and headers)
       def post_response(url, body, headers = {})
-        puts "#{Time.now} POST (response) #{url}"
+        logger.debug "POST (response) #{url}"
         uri = normalize_url(url)
 
         req = Net::HTTP::Post.new(uri.request_uri)
@@ -70,7 +72,7 @@ module ActiveCMIS
 
         http = authenticate_request(uri, req)
         response = http.request(req)
-        puts "#{Time.now} POSTED (#{response.code}) #{url}"
+        logger.debug "POSTED (#{response.code}) #{url}"
         response
       end
 
@@ -101,15 +103,16 @@ module ActiveCMIS
       end
 
       def handle_request(uri, req)
-        puts "#{Time.now} #{req.method} #{uri}"
+        logger.debug "#{req.method} #{uri}"
         http = authenticate_request(uri, req)
         response = http.request(req)
         status = response.code.to_i
-        puts "#{Time.now} RECEIVED #{response.code}"
+        logger.debug "RECEIVED #{response.code}"
         if 200 <= status && status < 300
           return response.body
         else
           # Problem: some codes 400, 405, 403, 409, 500 have multiple meanings
+          logger.error "Error occurred when handling request:\n#{response.body}"
           case status
           when 400; raise Error::InvalidArgument.new(response.body)
             # FIXME: can also be filterNotValid
