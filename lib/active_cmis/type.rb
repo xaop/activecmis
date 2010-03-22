@@ -75,8 +75,10 @@ module ActiveCMIS
       end
 
       def subtypes
-        url = data.xpath("at:link[@rel = 'down' and @type='application/atom+xml;type=feed']/@href", NS::COMBINED).first.to_s
-        Collection.new(repository, url) do |entry|
+        types_feed = Internal::Utils.extract_links(data, 'down', 'application/atom+xml', 'type' => 'feed')
+        raise "No subtypes link for #{id}" if types_feed.empty?
+
+        Collection.new(repository, types_feed.first) do |entry|
           id = entry.xpath("cra:type/c:id", NS::COMBINED).text
           repository.type_by_id id
         end

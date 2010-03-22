@@ -159,14 +159,13 @@ module ActiveCMIS
     # Depending on the repository there can be more than 1 parent folder
     # Always returns [] for relationships, policies may also return []
     def parent_folders
-      query = "at:link[@rel = 'up' and @type = 'application/atom+xml;type=%s']/@href"
-      parent_feed = data.xpath(query % 'feed', NS::COMBINED)
+      parent_feed = Internal::Utils.extract_links(data, 'up', 'application/atom+xml','type' => 'feed')
       unless parent_feed.empty?
-        Collection.new(repository, parent_feed.to_s)
+        Collection.new(repository, parent_feed.first)
       else
-        parent_entry = @data.xpath(query % 'entry', NS::COMBINED)
+        parent_entry = Internal::Utils.extract_links(data, 'up', 'application/atom+xml','type' => 'entries')
         unless parent_entry.empty?
-          e = conn.get_atom_entry(parent_feed.to_s)
+          e = conn.get_atom_entry(parent_entry.first)
           [ActiveCMIS::Object.from_atom_entry(repository, e)]
         else
           []

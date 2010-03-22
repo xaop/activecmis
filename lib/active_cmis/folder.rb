@@ -1,10 +1,9 @@
 module ActiveCMIS
   class Folder < ActiveCMIS::Object
     def items
-      query = "at:link[@rel = 'down' and @type = 'application/atom+xml;type=feed']/@href"
-      item_feed = data.xpath(query, NS::COMBINED)
-      raise "No child feed link for folder" unless item_feed
-      Collection.new(repository, item_feed.to_s)
+      item_feed = Internal::Utils.extract_links(data, 'down', 'application/atom+xml','type' => 'feed')
+      raise "No child feed link for folder" if item_feed.empty?
+      Collection.new(repository, item_feed.first)
     end
     cache :items
 

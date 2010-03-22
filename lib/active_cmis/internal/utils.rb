@@ -39,6 +39,25 @@ module ActiveCMIS
         when ::ActiveCMIS::Object; id
         end
       end
+
+      def self.extract_links(xml, rel, type_main = nil, type_params = {})
+        links = xml.xpath("at:link[@rel = '#{rel}']", NS::COMBINED)
+
+        if type_main
+          type_main = Regexp.escape(type_main)
+          if type_params.empty?
+            regex = /#{type_main}/
+          else
+            parameters = type_params.map {|k,v| "#{Regexp.escape(k)}=#{Regexp.escape(v)}" }.join (";\s*")
+            regex = /#{type_main};\s*#{parameters}/
+          end
+          links = links.select do |node|
+             regex === node.attribute("type").to_s
+          end
+        end
+
+        links.map {|l| l.attribute("href").to_s}
+      end
     end
   end
 end
