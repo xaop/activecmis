@@ -43,7 +43,8 @@ module ActiveCMIS
         if assignment
           raise "Mass assignment not yet supported to prefix"
         else
-          AttributePrefix.new(self, string)
+          @attribute_prefix ||= {}
+          @attribute_prefix[method] ||= AttributePrefix.new(self, string)
         end
       else
         super
