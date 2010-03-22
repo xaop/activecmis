@@ -20,6 +20,14 @@ module ActiveCMIS
       "<#ActiveCMIS::Repository #{key}>"
     end
 
+    def cmis_version
+      # NOTE: we might want to "version" our xml namespaces depending on the CMIS version
+      # If we do that we need to make this method capable of not using the predefined namespaces
+      #
+      # On the other hand breaking the XML namespace is probably going to break other applications too so the might not change them even when the spec is updated
+      @cmis_version ||= data.xpath("cra:repositoryInfo/c:cmisVersionSupported", NS::COMBINED).text
+    end
+
     # default parameters: renditionFilter => "*", includeAllowableActions => true, includeACL => true
     def object_by_id(id, parameters = {"renditionFilter" => "*", "includeAllowableActions" => "true", "includeACL" => true})
       ActiveCMIS::Object.from_parameters(self, parameters.merge("id" => id))
