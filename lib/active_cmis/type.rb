@@ -1,9 +1,9 @@
 module ActiveCMIS
   module Type
     def self.create(param_conn, repository, klass_data)
-      parent_id = klass_data.xpath("cra:type/c:parentId", NS::COMBINED)
-      superclass = if parent_id.first
-                     repository.type_by_id(parent_id.text)
+      parent_id = klass_data.xpath("cra:type/c:parentId/text()", NS::COMBINED)
+      superclass = if parent = parent_id.first
+                     repository.type_by_id(parent.to_s)
                    else
                      base_type_id = klass_data.xpath("cra:type/c:baseId", NS::COMBINED).text
                      case base_type_id
