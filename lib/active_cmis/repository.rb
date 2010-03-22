@@ -105,7 +105,7 @@ module ActiveCMIS
     #
     # All parameters are optional
     def changes(parameters = {})
-      query = "at:link[@rel = 'http://docs.oasis-open.org/ns/cmis/link/200908/changes']/@href"
+      query = "at:link[@rel = '#{Rel[cmis_version][:changes]}']/@href"
       link = data.xpath(query, NS::COMBINED)
       if link = link.first
         link = Internal::Utils.append_parameters(link.to_s, parameters)

@@ -116,7 +116,7 @@ module ActiveCMIS
     # FIXME: this needs to be Folder and Document only
 
     def target_relations
-      query = "at:link[@rel = 'http://docs.oasis-open.org/ns/cmis/link/200908/relationships']/@href"
+      query = "at:link[@rel = '#{Rel[repository.cmis_version][:relationships]}']/@href"
       link = data.xpath(query, NS::COMBINED)
       if link.length == 1
         link = Internal::Utils.append_parameters(link.text, "relationshipDirection" => "target", "includeSubRelationshipTypes" => true)
@@ -128,7 +128,7 @@ module ActiveCMIS
     cache :target_relations
 
     def source_relations
-      query = "at:link[@rel = 'http://docs.oasis-open.org/ns/cmis/link/200908/relationships']/@href"
+      query = "at:link[@rel = '#{Rel[repository.cmis_version][:relationships]}']/@href"
       link = data.xpath(query, NS::COMBINED)
       if link.length == 1
         link = Internal::Utils.append_parameters(link.text, "relationshipDirection" => "source", "includeSubRelationshipTypes" => true)
@@ -144,7 +144,7 @@ module ActiveCMIS
     def acl
       if repository.acls_readable? && allowable_actions["GetACL"]
         # FIXME: actual query should perhaps look at CMIS version before deciding which relation is applicable?
-        query = "at:link[@rel = 'http://docs.oasis-open.org/ns/cmis/link/200908/acl']/@href"
+        query = "at:link[@rel = '#{Rel[repository.cmis_version][:acl]}']/@href"
         link = data.xpath(query, NS::COMBINED)
         if link.length == 1
           Acl.new(repository, self, link.first.text, data.xpath("cra:object/c:acl", NS::COMBINED))
@@ -238,7 +238,7 @@ module ActiveCMIS
       if actions = data.xpath('cra:object/c:allowableActions', NS::COMBINED).first
         actions
       else
-        links = data.xpath("at:link[@rel = 'http://docs.oasis-open.org/ns/cmis/link/200908/allowableactions']/@href", NS::COMBINED)
+        links = data.xpath("at:link[@rel = '#{Rel[repository.cmis_version][:allowableactions]}']/@href", NS::COMBINED)
         if link = links.first
           conn.get_xml(link.text)
         else
