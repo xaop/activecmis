@@ -28,7 +28,7 @@ module ActiveCMIS
         req = Net::HTTP::Get.new(uri.request_uri)
         http = authenticate_request(uri, req)
         response = http.request(req)
-        puts "#{Time.now} GOT #{url}"
+        puts "#{Time.now} GOT (#{response.code}) #{url}"
         response
       end
 
@@ -57,6 +57,21 @@ module ActiveCMIS
         headers.each {|k,v| req.add_field k, v}
         req.body = body
         handle_request(uri, req)
+      end
+
+      # Does not throw errors, returns the full response (includes status code and headers)
+      def post_response(url, body, headers = {})
+        puts "#{Time.now} POST (response) #{url}"
+        uri = normalize_url(url)
+
+        req = Net::HTTP::Post.new(uri.request_uri)
+        headers.each {|k,v| req.add_field k, v}
+        req.body = body
+
+        http = authenticate_request(uri, req)
+        response = http.request(req)
+        puts "#{Time.now} POSTED (#{response.code}) #{url}"
+        response
       end
 
       def delete(url)

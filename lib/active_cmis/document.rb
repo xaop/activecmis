@@ -143,8 +143,9 @@ module ActiveCMIS
     # that was checked out, or it may be unset.
     def checkout
       body = render_atom_entry(self.class.attributes.reject {|k,v| k != "cmis:objectId"})
-      response = conn.post(repository.checkedout.url, body)
-      entry = Nokogiri::XML.parse(response).xpath("/at:entry", NS::COMBINED)
+
+      response = conn.post_response(repository.checkedout.url, body)
+      entry = Nokogiri::XML.parse(response.body).xpath("/at:entry", NS::COMBINED)
       self_or_new(entry)
     end
 
