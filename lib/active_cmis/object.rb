@@ -27,6 +27,29 @@ module ActiveCMIS
       # FIXME: decide? parameters to use?? always same ? or parameter with reload ?
     end
 
+    def method_missing(method, *parameters)
+      string = method.to_s
+      if string[-1] == ?=
+        assignment = true
+        string = string[0..-2]
+      end
+      if attributes.keys.include? string
+        if assignment
+          update(string => parameters.first)
+        else
+          attribute(string)
+        end
+      elsif self.class.attribute_prefixes.include? string
+        if assignment
+          raise "Mass assignment not yet supported to prefix"
+        else
+          AttributePrefix.new(self, string)
+        end
+      else
+        super
+      end
+    end
+
     def inspect
       "#<#{self.class.inspect} @key=#{key}>"
     end
