@@ -2,14 +2,14 @@ module ActiveCMIS
   # This class is used to manage different CMIS servers.
   class Server
     include Internal::Caching
-    attr_reader :endpoint
+    attr_reader :endpoint, :logger
 
-    def self.new(endpoint)
+    def self.new(endpoint, logger = nil)
       endpoint = case endpoint
                  when URI; endpoint
                  else URI(endpoint.to_s)
                  end
-      endpoints[endpoint] ||= super(endpoint)
+      endpoints[endpoint] ||= super(endpoint, logger || ActiveCMIS.default_logger)
     end
 
     def self.endpoints
@@ -26,13 +26,9 @@ module ActiveCMIS
     # A connection needs the URL to a CMIS REST endpoint.
     #
     # It's used to manage all communication with the CMIS Server
-    def initialize(endpoint)
+    def initialize(endpoint, logger)
       @endpoint = endpoint
-    end
-
-    def logger=(logger)
       @logger = logger
-      conn.logger = logger
     end
 
     # Use authentication to access the CMIS repository
@@ -52,7 +48,7 @@ module ActiveCMIS
                                                if repository_data.empty?
                                                  raise Error::ObjectNotFound.new("The repository #{repository_id} doesn't exist")
                                                else
-                                                 Repository.new(conn.dup, repository_data)
+                                                 Repository.new(conn.dup, logger.dup, repository_data)
                                                end
                                              end
     end
@@ -77,7 +73,7 @@ module ActiveCMIS
     end
 
     def conn
-      @conn ||= Internal::Connection.new
+      @conn ||= Internal::Connection.new(logger.dup)
     end
   end
 end

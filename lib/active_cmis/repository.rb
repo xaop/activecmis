@@ -1,10 +1,11 @@
 module ActiveCMIS
   class Repository
-    attr_accessor :logger
+    attr_reader :logger
 
-    def initialize(connection, initial_data) #:nodoc:
+    def initialize(connection, logger, initial_data) #:nodoc:
       @conn = connection
       @data = initial_data
+      @logger = logger
     end
 
     # Use authentication to access the CMIS repository

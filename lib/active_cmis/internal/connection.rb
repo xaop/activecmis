@@ -1,8 +1,11 @@
 module ActiveCMIS
   module Internal
     class Connection
-      attr_reader :user
-      attr_accessor :logger # Don't write to it if you aren't human or reading the users configuration
+      attr_reader :user, :logger
+
+      def initialize(logger)
+        @logger = logger || ActiveCMIS.default_logger
+      end
 
       def authenticate(method, *params)
         case method
