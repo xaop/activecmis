@@ -16,6 +16,13 @@ module ActiveCMIS
       @endpoints ||= {}
     end
 
+    def inspect
+      "Server #{@endpoint}"
+    end
+    def to_s
+      "Server " + @endpoint.to_s + " : " + repositories.map {|h| h[:name] + "(#{h[:id]})"}.join(", ")
+    end
+
     # A connection needs the URL to a CMIS REST endpoint.
     #
     # It's used to manage all communication with the CMIS Server
