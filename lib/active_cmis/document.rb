@@ -87,6 +87,7 @@ module ActiveCMIS
         entry = conn.get_atom_entry(link.first.text)
         self_or_new(entry)
       else
+        # FIXME: should somehow return the current version even for opencmis
         self
       end
     end
