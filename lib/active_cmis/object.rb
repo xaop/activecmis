@@ -353,7 +353,7 @@ module ActiveCMIS
       if attributes.empty? && checkin.nil?
         raise "Error: saving attributes but nothing to do"
       end
-      properties = self.class.attributes.reject {|key,_| !attributes.include?(key)}
+      properties = self.class.attributes.reject {|key,_| !updated_attributes.include?(key)}
       body = render_atom_entry(properties, values)
 
       if checkin.nil?
@@ -365,7 +365,8 @@ module ActiveCMIS
           parameters.merge! "major" => !!major, "checkinComment" => Internal::Utils.escape_url_parameter(comment)
 
           if properties.empty?
-            body = nil
+            # The standard specifies that we can have an empty body here, that does not seem to be true for OpenCMIS
+            # body = ""
           end
         end
       end
