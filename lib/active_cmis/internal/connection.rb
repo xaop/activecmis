@@ -47,10 +47,11 @@ module ActiveCMIS
         get_xml(url).child
       end
 
-      def put(url, body)
+      def put(url, body, headers = {})
         uri = normalize_url(url)
 
         req = Net::HTTP::Put.new(uri.request_uri)
+        headers.each {|k,v| req.add_field k, v}
         req.body = body
         handle_request(uri, req)
       end

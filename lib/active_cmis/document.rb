@@ -44,14 +44,17 @@ module ActiveCMIS
     end
     cache :renditions
 
-    # NOTE: Not implemented yet
+    attr_reader :updated_contents
+
     # options for content can be :file => filename or :data => binary_data
     # :overwrite defaults to true, if false the content of the document won't be overwritten
     # :mime_type => mime_type
     #
     # This returns the document with the new content, this may be a new version in the version series and as such may not be equal to self
-    def set_content_stream(mime_type, options)
-      # put to link with rel 'edit-media'
+    #
+    # Warning: this doesn't update the content stream you get from content_stream (because it is cached)
+    def set_content_stream(options)
+      @updated_contents = options
     end
 
     # :section: Versioning
@@ -181,14 +184,48 @@ module ActiveCMIS
       end
     end
 
+    def reload
+      @updated_contents = nil
+      super
+    end
+
+    # Optional parameters:
+    #   - properties: a hash key/definition pairs of properties to be rendered (defaults to all attributes)
+    #   - attributes: a hash key/value pairs used to determine the values rendered (defaults to self.attributes)
+    def render_atom_entry(properties = self.class.attributes, attributes = self.attributes, options = {})
+      builder = Nokogiri::XML::Builder.new do |xml|
+        xml.entry(NS::COMBINED) do
+          xml.parent.namespace = xml.parent.namespace_definitions.detect {|ns| ns.prefix == "at"}
+          xml["at"].author do
+            xml["at"].name conn.user # FIXME: find reliable way to set author?
+          end
+          if updated_contents && options[:create]
+            xml["cra"].content do
+              xml["cra"].mediatype(updated_contents[:mimetype] || "application/binary")
+              data = updated_contents[:data] || File.read(updated_contents[:file])
+              xml["cra"].base64 [data].pack("m")
+            end
+          end
+          xml["cra"].object do
+            xml["c"].properties do
+              properties.each do |key, definition|
+                definition.render_property(xml, attributes[key])
+              end
+            end
+          end
+        end
+      end
+      builder.to_xml
+    end
+
     private
 
     def updated_aspects(*params)
       result = super
 
-      # Only for certain objects
-      if false# content_stream_updated
-        result << {:message => :save_content_stream, :parameters => [updated_content_stream]}
+      unless key.nil? || updated_contents.nil?
+        # Don't set content_stream separately if it can be done by setting the content during create
+        result << {:message => :save_content_stream, :parameters => [updated_contents]}
       end
 
       result
@@ -219,7 +256,23 @@ module ActiveCMIS
     end
 
     def save_content_stream(stream)
-      # ??
+      raise "no content to save" if stream.nil?
+
+      # put to link with rel 'edit-media' if it's there
+      # NOTE: cmislib uses the src link of atom:content instead, that might be correct
+      edit_links = Internal::Utils.extract_links(data, "edit-media")
+      if edit_links.length == 1
+        link = edit_links.first
+      elsif edit_links.empty?
+        raise "No edit-media link, can't save content"
+      else
+        raise "Too many edit-media links, don't know how to choose"
+      end
+      data = stream[:data] || File.open(stream[:file])
+      content_type = stream[:mime_type] || "application/octet-stream"
+
+      url = Internal::Utils.append_parameters(link, "overwrite" => stream[:overwrite]) if stream.has_key?(:overwrite)
+      conn.put(url, data, "Content-Type" => content_type)
       self
     end
   end

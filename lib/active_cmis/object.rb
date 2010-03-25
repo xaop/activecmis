@@ -274,7 +274,7 @@ module ActiveCMIS
     # Optional parameters:
     #   - properties: a hash key/definition pairs of properties to be rendered (defaults to all attributes)
     #   - attributes: a hash key/value pairs used to determine the values rendered (defaults to self.attributes)
-    def render_atom_entry(properties = self.class.attributes, attributes = self.attributes)
+    def render_atom_entry(properties = self.class.attributes, attributes = self.attributes, options = {})
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.entry(NS::COMBINED) do
           xml.parent.namespace = xml.parent.namespace_definitions.detect {|ns| ns.prefix == "at"}
@@ -333,7 +333,7 @@ module ActiveCMIS
       properties = self.class.attributes.reject do |key, definition|
         !updated_attributes.include?(key) && !definition.required
       end
-      body = render_atom_entry(properties)
+      body = render_atom_entry(properties, attributes, :create => true)
 
       url = create_url
       response = conn.post(create_url, body, "Content-Type" => "application/atom+xml;type=entry")
