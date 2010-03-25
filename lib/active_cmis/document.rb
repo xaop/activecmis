@@ -12,20 +12,20 @@ module ActiveCMIS
           ActiveCMIS::Rendition.new(repository, "href" => content['src'], "type" => content["type"])
         else
           if content['type'] =~ /\+xml$/
-            data = content.to_xml # FIXME: this may not preserve whitespace
+            content_data = content.to_xml # FIXME: this may not preserve whitespace
           else
-            data = data.unpack("m*").first
+            content_data = data.unpack("m*").first
           end
-          ActiveCMIS::Rendition.new(repository, "data" => data, "type" => content["type"])
+          ActiveCMIS::Rendition.new(repository, "data" => content_data, "type" => content["type"])
         end
       elsif content = data.xpath("cra:content", NS::COMBINED).first
         content.children.each do |node|
           next unless node.namespace and node.namespace.href == NS::CMIS_REST
-          data = node.text if node.name == "base64"
-          type = node.text if node.name == "mediaType"
+          content_data = node.text if node.name == "base64"
+          content_type = node.text if node.name == "mediaType"
         end
-        data = data.unpack("m*").first
-        ActiveCMIS::Rendition.new(repository, "data" => data, "type" => type)
+        data = content_data.unpack("m*").first
+        ActiveCMIS::Rendition.new(repository, "data" => content_data, "type" => content_type)
       end
     end
     cache :content_stream
