@@ -68,6 +68,7 @@ module ActiveCMIS
         [self]
       end
     end
+    cache :versions
 
     # Returns self if this is the latest version
     # Note: There will allways be a latest version in a version series
