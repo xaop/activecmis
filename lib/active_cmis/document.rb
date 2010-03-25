@@ -146,8 +146,12 @@ module ActiveCMIS
       body = render_atom_entry(self.class.attributes.reject {|k,v| k != "cmis:objectId"})
 
       response = conn.post_response(repository.checkedout.url, body)
-      entry = Nokogiri::XML.parse(response.body).xpath("/at:entry", NS::COMBINED)
-      self_or_new(entry)
+      if 200 <= response.code.to_i && response.code.to_i < 300
+        entry = Nokogiri::XML.parse(response.body).xpath("/at:entry", NS::COMBINED)
+        self_or_new(entry)
+      else
+        raise response.body
+      end
     end
 
     # This action may not be permitted (query allowable_actions to see whether it is permitted)
