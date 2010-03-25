@@ -54,6 +54,12 @@ module ActiveCMIS
     #
     # Warning: this doesn't update the content stream you get from content_stream (because it is cached)
     def set_content_stream(options)
+      updatability = repository.capabilities["ContentStreamUpdatability"]
+      if updatability == "none"
+        raise "Content can't be updated in this repository"
+      elsif updatability == "pwconly" && !working_copy?
+        raise "Content can only be updated for working copies in this repository"
+      end
       @updated_contents = options
     end
 
