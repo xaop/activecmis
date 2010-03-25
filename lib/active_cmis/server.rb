@@ -9,7 +9,7 @@ module ActiveCMIS
                  when URI; endpoint
                  else URI(endpoint.to_s)
                  end
-      endpoints[endpoint] ||= super(endpoint, logger || ActiveCMIS.default_logger)
+      endpoints[[endpoint, logger]] ||= super(endpoint, logger || ActiveCMIS.default_logger)
     end
 
     def self.endpoints

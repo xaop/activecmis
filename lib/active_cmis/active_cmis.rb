@@ -49,8 +49,7 @@ module ActiveCMIS
           logger.level = Logger::WARN
         end
 
-        server = Server.new(config["server_url"])
-        server.logger = logger
+        server = Server.new(config["server_url"], logger)
         if user_name = config["server_login"] and password = config["server_password"]
           auth_type = config["server_auth"] || :basic
           server.authenticate(auth_type, user_name, password)
