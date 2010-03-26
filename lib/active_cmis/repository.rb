@@ -55,7 +55,7 @@ module ActiveCMIS
       end
     end
 
-    %w[root query checkedout unfiled].each do |coll_name|
+    %w[root checkedout unfiled].each do |coll_name|
       define_method coll_name do
         iv = :"@#{coll_name}"
         if instance_variable_defined?(iv)
@@ -114,6 +114,34 @@ module ActiveCMIS
         link = Internal::Utils.append_parameters(link.to_s, parameters)
         Collection.new(self, link)
       end
+    end
+
+    # Returns a collection with the results of a query (if supported by the repository)
+    #
+    # Parameters: a Hash containing parameters, valid keys (always strings) are:
+    # - searchAllVersions (true, false (default))
+    # - includeAllowableActions (true, false (default))
+    # - includeRelationships (none, source, target, both)
+    # - renditionFilter ('cmis:none' (default), '*' (all), comma-separated list of rendition kinds or mimetypes)
+    # - maxItems (per page, this is not the same as a limit on the query)
+    # - skipCount (same here, is for paging purposes, defaults to 0)
+    def query(query_string, options = {})
+      raise "This repository does not support queries" if capabilities["Query"] == "none"
+      # For the moment we make no difference between metadataonly,fulltextonly,bothseparate and bothcombined
+      # Nor do we look at capabilities["Join"] (none, inneronly, innerandouter)
+
+      # For searchAllVersions need to check capabilities["AllVersionsSearchable"]
+      # includeRelationships, includeAllowableActions and renditionFilter only work if SELECT only contains attributes from 1 object
+      valid_params = ["searchAllVersions", "includeAllowableActions", "includeRelationships", "renditionFilter", "maxItems", "skipCount"]
+      invalid_params = options.keys - valid_params
+      unless invalid_params.empty?
+        raise "Invalid parameters for query: #{invalid_params.join ', '}"
+      end
+
+      # FIXME: options are not respected yet by pick_template
+      url = pick_template("query", :mimetype => "application/atom+xml", :type => "feed")
+      url = fill_in_template(url, options.merge("q" => query_string))
+      Collection.new(self, url)
     end
 
     def root_folder
