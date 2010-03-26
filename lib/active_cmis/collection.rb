@@ -5,7 +5,7 @@ module ActiveCMIS
 
     attr_reader :repository, :url
 
-    def initialize(repository, url, &map_entry)
+    def initialize(repository, url, first_page = nil, &map_entry)
       @repository = repository
       @url = URI.parse(url)
 
@@ -17,6 +17,10 @@ module ActiveCMIS
         ActiveCMIS::Object.from_atom_entry(repository, e)
       end
 
+      if first_page
+        @next = first_page.xpath("at:feed/at:link[@rel = 'next']/@href", NS::COMBINED).first
+        @pages[0] = first_page
+      end
     end
 
     def length
