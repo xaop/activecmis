@@ -52,7 +52,7 @@ module ActiveCMIS
 
         req = Net::HTTP::Put.new(uri.request_uri)
         headers.each {|k,v| req.add_field k, v}
-        req.body = body
+        assign_body(req, body)
         handle_request(uri, req)
       end
 
@@ -61,7 +61,7 @@ module ActiveCMIS
 
         req = Net::HTTP::Post.new(uri.request_uri)
         headers.each {|k,v| req.add_field k, v}
-        req.body = body
+        assign_body(req, body)
         handle_request(uri, req)
       end
 
@@ -72,7 +72,7 @@ module ActiveCMIS
 
         req = Net::HTTP::Post.new(uri.request_uri)
         headers.each {|k,v| req.add_field k, v}
-        req.body = body
+        assign_body(req, body)
 
         http = authenticate_request(uri, req)
         response = http.request(req)
@@ -104,6 +104,19 @@ module ActiveCMIS
           req.send(auth[:method], *auth[:params])
         end
         http
+      end
+
+      def assign_body(req, body)
+        if body.respond_to? :length
+          req.body = body
+        else
+          req.body_stream = body
+          if body.respond_to? :stat
+            req["Content-Length"] = body.stat.size.to_s
+          elsif req["Content-Size"].nil?
+            req["Transfer-Encoding"] = 'chunked'
+          end
+        end
       end
 
       def handle_request(uri, req)
