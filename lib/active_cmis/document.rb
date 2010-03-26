@@ -278,7 +278,11 @@ module ActiveCMIS
       data = stream[:data] || File.open(stream[:file])
       content_type = stream[:mime_type] || "application/octet-stream"
 
-      url = Internal::Utils.append_parameters(link, "overwrite" => stream[:overwrite]) if stream.has_key?(:overwrite)
+      if stream.has_key?(:overwrite)
+        url = Internal::Utils.append_parameters(link, "overwrite" => stream[:overwrite])
+      else
+        url = link
+      end
       conn.put(url, data, "Content-Type" => content_type)
       self
     end
