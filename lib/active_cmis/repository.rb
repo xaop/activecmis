@@ -72,6 +72,7 @@ module ActiveCMIS
       end
     end
 
+    # A collection containing the CMIS base types supported by this repository
     def base_types
       @base_types ||= begin
                         query = "app:collection[cra:collectionType[child::text() = 'types']]/@href"
@@ -88,6 +89,7 @@ module ActiveCMIS
                       end
     end
 
+    # An array containing all the types used by this repository
     def types
       @types ||= base_types.map do |t|
         t.all_subtypes
