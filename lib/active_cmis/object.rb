@@ -14,7 +14,7 @@ module ActiveCMIS
 
       if @data.nil?
         # Creating a new type from scratch
-        raise "This type is not creatable" unless self.class.creatable
+        raise Error::Constraint.new("This type is not creatable") unless self.class.creatable
         @key = parameters["id"]
         @allowable_actions = {}
         @parent_folders = [] # start unlinked
@@ -41,7 +41,7 @@ module ActiveCMIS
         end
       elsif self.class.attribute_prefixes.include? string
         if assignment
-          raise "Mass assignment not yet supported to prefix"
+          raise NotImplementedError.new("Mass assignment not yet supported to prefix")
         else
           @attribute_prefix ||= {}
           @attribute_prefix[method] ||= AttributePrefix.new(self, string)
@@ -146,7 +146,7 @@ module ActiveCMIS
         link = Internal::Utils.append_parameters(link.text, "relationshipDirection" => "target", "includeSubRelationshipTypes" => true)
         Collection.new(repository, link)
       else
-        raise "Expected exactly 1 relationships link for #{key}, got #{link.length}, are you sure this is a document/folder"
+        raise "Expected exactly 1 relationships link for #{key}, got #{link.length}, are you sure this is a document/folder?"
       end
     end
     cache :target_relations
@@ -158,7 +158,7 @@ module ActiveCMIS
         link = Internal::Utils.append_parameters(link.text, "relationshipDirection" => "source", "includeSubRelationshipTypes" => true)
         Collection.new(repository, link)
       else
-        raise "Expected exactly 1 relationships link for #{key}, got #{link.length}, are you sure this is a document/folder"
+        raise "Expected exactly 1 relationships link for #{key}, got #{link.length}, are you sure this is a document/folder?"
       end
     end
     cache :source_relations
@@ -199,7 +199,7 @@ module ActiveCMIS
     cache :parent_folders
 
     def file(folder)
-      raise "Not supported" unless self.class.fileable
+      raise Error::Constraint.new("Filing not supported for objects of type: #{self.class.id}") unless self.class.fileable
       @original_parent_folders ||= parent_folders.dup
       if repository.capabilities["MultiFiling"]
         @parent_folders << folder
@@ -210,7 +210,7 @@ module ActiveCMIS
 
     # FIXME: should throw exception if folder is not actually in @parent_folders?
     def unfile(folder = nil)
-      raise "Not supported" unless self.class.fileable
+      raise Error::Constraint.new("Filing not supported for objects of type: #{self.class.id}") unless self.class.fileable
       @original_parent_folders ||= parent_folders.dup
       if repository.capabilities["UnFiling"]
         if folder.nil?
@@ -221,7 +221,7 @@ module ActiveCMIS
       elsif @parent_folders.length > 1
         @parent_folders.delete(folder)
       else
-        raise "Unfiling not supported by the repository"
+        raise Error::NotSupported.new("Unfiling not supported for this repository")
       end
     end
 
@@ -327,7 +327,7 @@ module ActiveCMIS
 
     def save_new_object
       if self.class.required_attributes.any? {|a, _| attribute(a).nil? }
-        raise "Not all required attributes are filled in"
+        raise Error::InvalidArgument.new("Not all required attributes are filled in")
       end
 
       properties = self.class.attributes.reject do |key, definition|

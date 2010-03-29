@@ -10,7 +10,7 @@ module ActiveCMIS
           :changes => "#{prefix}changes",
         }
       else
-        raise "ActiveCMIS only works with CMIS 1.0, requested version was #{version}"
+        raise ActiveCMIS::Error.new("ActiveCMIS only works with CMIS 1.0, requested version was #{version}")
       end
     end
   end

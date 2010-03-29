@@ -39,7 +39,7 @@ module ActiveCMIS
       def _rb2cmis(xml, value)
         v = value.to_s
         if max_length && v.length > max_length
-          raise "String representation is longer than maximum (max: #{max_length}, string: \n'\n#{v}\n')\n"
+          raise Error::InvalidArgument.new("String representation is longer than maximum (max: #{max_length}, string: \n'\n#{v}\n')\n")
         end
         xml["c"].value v
       end
@@ -67,7 +67,7 @@ module ActiveCMIS
       def _rb2cmis(xml, value)
         v = value.to_f
         if (min_value && v < min_value) || (max_value && v > max_value)
-          raise "OutOfBounds: #{v} should be between #{min_value} and #{max_value}"
+          raise Error::InvalidArgument.new("OutOfBounds: #{v} should be between #{min_value} and #{max_value}")
         end
         xml["c"].value("%f" % v)
       end
@@ -94,7 +94,7 @@ module ActiveCMIS
       def _rb2cmis(xml, value)
         v = value.to_int
         if (min_value && v < min_value) || (max_value && v > max_value)
-          raise "OutOfBounds: #{v} should be between #{min_value} and #{max_value}"
+          raise Error::InvalidArgument.new("OutOfBounds: #{v} should be between #{min_value} and #{max_value}")
         end
         xml["c"].value("%i" % v)
       end

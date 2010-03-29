@@ -56,14 +56,14 @@ module ActiveCMIS
     def set_content_stream(options)
       if key.nil?
         if self.class.content_stream_allowed == "notallowed"
-          raise "Documents of this type can't have content"
+          raise Error::StreamNotSupported.new("Documents of this type can't have content")
         end
       else
         updatability = repository.capabilities["ContentStreamUpdatability"]
         if updatability == "none"
-          raise "Content can't be updated in this repository"
+          raise Error::NotSupported.new("Content can't be updated in this repository")
         elsif updatability == "pwconly" && !working_copy?
-          raise "Content can only be updated for working copies in this repository"
+          raise Error::Constraint.new("Content can only be updated for working copies in this repository")
         end
       end
       @updated_contents = options
@@ -172,10 +172,12 @@ module ActiveCMIS
 
     # This action may not be permitted (query allowable_actions to see whether it is permitted)
     def cancel_checkout
-      if working_copy?
+      if !self.class.versionable
+        raise Error::Constraint.new("Object is not versionable, can't cancel checkout")
+      elsif working_copy?
         conn.delete(self_link)
       else
-        raise "Not a working copy"
+        raise Error::InvalidArgument.new("Not a working copy")
       end
     end
 
@@ -263,12 +265,13 @@ module ActiveCMIS
           Internal::Utils.append_parameters(url, "versioningState" => "none")
         end
       else
-        raise "Creating an unfiled document is not supported by CMIS"
-        # Can't create documents that are unfiled
+        raise Error::NotSupported.new("Creating an unfiled document is not supported by CMIS")
+        # Can't create documents that are unfiled, CMIS does not support it (note this means exceptions should not actually be NotSupported)
       end
     end
 
     def save_content_stream(stream)
+      # Should never occur (is private method)
       raise "no content to save" if stream.nil?
 
       # put to link with rel 'edit-media' if it's there
@@ -277,9 +280,9 @@ module ActiveCMIS
       if edit_links.length == 1
         link = edit_links.first
       elsif edit_links.empty?
-        raise "No edit-media link, can't save content"
+        raise Error.new("No edit-media link, can't save content")
       else
-        raise "Too many edit-media links, don't know how to choose"
+        raise Error.new("Too many edit-media links, don't know how to choose")
       end
       data = stream[:data] || File.open(stream[:file])
       content_type = stream[:mime_type] || "application/octet-stream"
