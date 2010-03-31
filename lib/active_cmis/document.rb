@@ -126,6 +126,8 @@ module ActiveCMIS
     end
 
     def working_copy?
+      return false if key.nil?
+
       # NOTE: This may not be a sufficient condition, but according to the spec it should be
       !data.xpath("at:link[@rel = 'via']", NS::COMBINED).empty?
     end
