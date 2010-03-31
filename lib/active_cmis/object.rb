@@ -357,7 +357,7 @@ module ActiveCMIS
         raise "Error: saving attributes but nothing to do"
       end
       properties = self.class.attributes.reject {|key,_| !updated_attributes.include?(key)}
-      body = render_atom_entry(properties, values)
+      body = render_atom_entry(properties, values, :checkin => checkin)
 
       if checkin.nil?
         parameters = {}

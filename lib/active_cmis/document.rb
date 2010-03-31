@@ -222,9 +222,9 @@ module ActiveCMIS
           xml["at"].author do
             xml["at"].name conn.user # FIXME: find reliable way to set author?
           end
-          if updated_contents && options[:create]
+          if updated_contents && (options[:create] || options[:checkin])
             xml["cra"].content do
-              xml["cra"].mediatype(updated_contents[:mimetype] || "application/binary")
+              xml["cra"].mediatype(updated_contents[:mime_type] || "application/binary")
               data = updated_contents[:data] || File.read(updated_contents[:file])
               xml["cra"].base64 [data].pack("m")
             end
@@ -238,16 +238,27 @@ module ActiveCMIS
           end
         end
       end
+      conn.logger.debug builder.to_xml
       builder.to_xml
     end
 
     private
 
-    def updated_aspects(*params)
+    def updated_aspects(checkin = nil)
+      if working_copy? && !(checkin || repository.pwc_ubdatable)
+        raise Error::NotSupported.new("Updating a PWC without checking in is not supported by repository")
+      end
+      unless working_copy? || checkin.nil?
+        raise Error::NotSupported.new("Can't check in when not checked out")
+      end
+
       result = super
 
-      unless key.nil? || updated_contents.nil?
+      unless checkin || key.nil? || updated_contents.nil?
         # Don't set content_stream separately if it can be done by setting the content during create
+        #
+        # TODO: For checkin we could try to see if we can save it via puts *before* we checkin,
+        # If not checking in we should also try to see if we can actually save it
         result << {:message => :save_content_stream, :parameters => [updated_contents]}
       end
 
