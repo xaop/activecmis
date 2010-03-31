@@ -166,7 +166,13 @@ module ActiveCMIS
       response = conn.post_response(repository.checkedout.url, body)
       if 200 <= response.code.to_i && response.code.to_i < 300
         entry = Nokogiri::XML.parse(response.body).xpath("/at:entry", NS::COMBINED)
-        self_or_new(entry)
+        result = self_or_new(entry)
+        if result.working_copy? # Work around a bug in OpenCMIS where result returned is the version checked out not the PWC
+          result
+        else
+          conn.logger.warn "Repository did not return working copy for checkout operation"
+          result.working_copy
+        end
       else
         raise response.body
       end
@@ -252,6 +258,8 @@ module ActiveCMIS
       if entry.nil?
         nil
       elsif entry.xpath("cra:object/c:properties/c:propertyId[@propertyDefinitionId = 'cmis:objectId']/c:value", NS::COMBINED).text == id
+        reload
+        @data = entry
         self
       else
         ActiveCMIS::Object.from_atom_entry(repository, entry)
