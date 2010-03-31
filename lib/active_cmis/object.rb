@@ -202,7 +202,7 @@ module ActiveCMIS
       raise Error::Constraint.new("Filing not supported for objects of type: #{self.class.id}") unless self.class.fileable
       @original_parent_folders ||= parent_folders.dup
       if repository.capabilities["MultiFiling"]
-        @parent_folders << folder
+        @parent_folders << folder unless @parent_folders.detect {|f| f.id == folder.id }
       else
         @parent_folders = [folder]
       end
@@ -216,12 +216,15 @@ module ActiveCMIS
         if folder.nil?
           @parent_folders = []
         else
-          @parent_folders.delete(folder)
+          @parent_folders.delete_if {|f| f.id == folder.id}
         end
-      elsif @parent_folders.length > 1
-        @parent_folders.delete(folder)
       else
-        raise Error::NotSupported.new("Unfiling not supported for this repository")
+        @parent_folders.delete_if {|f| f.id == folder.id}
+        if @parent_folders.empty?
+          @parent_folders = @original_parent_folders
+          @original_parent_folders = nil
+          raise Error::NotSupported.new("Unfiling not supported for this repository")
+        end
       end
     end
 
