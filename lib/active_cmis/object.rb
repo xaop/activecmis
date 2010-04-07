@@ -102,7 +102,7 @@ module ActiveCMIS
     def update(attributes)
       attributes.each do |key, value|
         if (property = self.class.attributes[key.to_s]).nil?
-          raise "You are trying to add an unknown attribute (#{key})"
+          raise Error::Constraint.new("You are trying to add an unknown attribute (#{key})")
         else
           property.validate_ruby_value(value)
         end
