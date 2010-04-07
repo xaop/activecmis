@@ -1,5 +1,11 @@
 require 'rubygems'
 require 'rake/gempackagetask'
+require 'yard'
+
+YARD::Rake::YardocTask.new do |t|
+  t.files   = ['lib/**/*.rb']   # optional
+  t.options = ["--default-return", "::Object", "--query", "!@private", "--hide-void-return"]
+end
 
 PACKAGE_VERSION = File.readlines("VERSION")[0][/[\d.]*/]
 
@@ -11,7 +17,7 @@ spec = Gem::Specification.new do |s|
   s.email = "joeri@xaop.com"
 
   s.summary = "Interface to CMIS implementations comparable to ActiveRecord"
-  s.description = "A SOAP interface to CMIS, using soap4r"
+  s.description = "An interface to CMIS, using the AtomPub Rest interface"
 
   s.files += %w(VERSION Rakefile)
   s.files += Dir['lib/**/*.rb']
