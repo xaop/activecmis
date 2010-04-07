@@ -2,10 +2,22 @@ module ActiveCMIS
   class Object
     include Internal::Caching
 
-    attr_reader :repository, :used_parameters
+    # The repository that contains this object
+    # @return [Repository]
+    attr_reader :repository
+
+    # The cmis:objectId of the object, or nil if the document does not yet exist in the repository
+    # @return [String,nil]
     attr_reader :key
     alias id key
 
+    # Creates a representation of an CMIS Object in the repository
+    #
+    # Not meant for direct use, use {Repository#object_by_id} instead. To create a new object use the new method on the type that you want the new object to have.
+    #
+    # @param [Repository] repository The repository this object belongs to
+    # @param [Nokogiri::XML::Node,nil] data The preparsed XML Atom Entry or nil if the object does not yet exist
+    # @param [Hash] parameters A list of parameters used to get the Atom Entry
     def initialize(repository, data, parameters)
       @repository = repository
       @data = data
@@ -27,6 +39,15 @@ module ActiveCMIS
       # FIXME: decide? parameters to use?? always same ? or parameter with reload ?
     end
 
+    # Via method missing attribute accessors and setters are provided for the CMIS attributes of an object.
+    # If attributes have a colon in their name you can access them by changing the colon in a dot
+    #
+    # @example Set an attribute named DateTimePropMV
+    #   my_object.DateTimePropMV = Time.now #=> "Wed Apr 07 14:34:19 0200 2010"
+    # @example Read the attribute named DateTimePropMV
+    #   my_object.DateTimePropMV #=> "Wed Apr 07 14:34:19 0200 2010"
+    # @example Get the cmis:name of an object
+    #   my_object.cmis.name #=> "My object 25"
     def method_missing(method, *parameters)
       string = method.to_s
       if string[-1] == ?=
@@ -51,21 +72,29 @@ module ActiveCMIS
       end
     end
 
+    # @return [String]
     def inspect
       "#<#{self.class.inspect} @key=#{key}>"
     end
 
+    # Shorthand for the cmis:name of an object
     def name
       attribute('cmis:name')
     end
     cache :name
 
+    # A list of all attributes that have changed locally
+    # @return [Array<String>]
     attr_reader :updated_attributes
 
+    # Attribute getter for the CMIS attributes of an object
+    # @param [String] name The property id of the attribute
     def attribute(name)
       attributes[name]
     end
 
+    # Attribute getter for the CMIS attributes of an object
+    # @return [Hash{String => ::Object}] All attributes, the keys are the property ids of the attributes
     def attributes
       self.class.attributes.inject({}) do |hash, (key, attr)|
         if data.nil?
@@ -96,9 +125,14 @@ module ActiveCMIS
     end
     cache :attributes
 
-    # Updates the given attributes, without saving the document
-    # Use save to make these changes permanent and visible outside this instance of the document
-    # (other #reload after save on other instances of this document to reflect the changes)
+    # Attribute setter for all CMIS attributes. This only updates this copy of the object.
+    # Use save to make these changes permanent and visible in the repositorhy.
+    # (use {#reload} after save on other instances of this document to reflect these changes)
+    #
+    # @param [{String => ::Object}] attributes A hash with new values for selected attributes
+    # @raise [Error::Constraint] if a readonly attribute is set
+    # @raise if a value can't be converted to the necessary type or falls outside the constraints
+    # @return [{String => ::Object}] The updated attributes hash
     def update(attributes)
       attributes.each do |key, value|
         if (property = self.class.attributes[key.to_s]).nil?
@@ -111,8 +145,10 @@ module ActiveCMIS
       self.attributes.merge!(attributes)
     end
 
-    # WARNING: because of the way CMIS is constructed the save operation is not atomic if updates happen to different aspects of the object
-    # (parent folders, attributes, content stream, acl), we can't work around this because there is no transaction in CMIS either
+    # Saves all changes to the object in the repository.
+    #
+    # *WARNING*: because of the way CMIS is constructed the save operation is not atomic if updates happen to different aspects of the object
+    # (parent folders, attributes, content stream, acl), we can't work around this because CMIS lacks transactions
     def save
       # FIXME: find a way to handle errors?
       # FIXME: what if multiple objects are created in the course of a save operation?
@@ -123,6 +159,7 @@ module ActiveCMIS
       result
     end
 
+    # @return [Hash{String => Boolean,String}] A hash containing all actions allowed on this object for the current user
     def allowable_actions
       actions = {}
       _allowable_actions.children.map do |node|
@@ -136,9 +173,8 @@ module ActiveCMIS
     end
     cache :allowable_actions
 
-    # :section: Relationships
-    # FIXME: this needs to be Folder and Document only
-
+    # Returns all relationships where this object is the target
+    # @return [Collection]
     def target_relations
       query = "at:link[@rel = '#{Rel[repository.cmis_version][:relationships]}']/@href"
       link = data.xpath(query, NS::COMBINED)
@@ -151,6 +187,8 @@ module ActiveCMIS
     end
     cache :target_relations
 
+    # Returns all relationships where this object is the source
+    # @return [Collection]
     def source_relations
       query = "at:link[@rel = '#{Rel[repository.cmis_version][:relationships]}']/@href"
       link = data.xpath(query, NS::COMBINED)
@@ -163,8 +201,7 @@ module ActiveCMIS
     end
     cache :source_relations
 
-    # :section: ACL
-    # All 4 subtypes can have an acl
+    # @return [Acl,nil] The ACL of the document, if there is any at all
     def acl
       if repository.acls_readable? && allowable_actions["GetACL"]
         # FIXME: actual query should perhaps look at CMIS version before deciding which relation is applicable?
@@ -178,10 +215,10 @@ module ActiveCMIS
       end
     end
 
-    # :section: Fileable
-
     # Depending on the repository there can be more than 1 parent folder
     # Always returns [] for relationships, policies may also return []
+    #
+    # @return [Array<Folder>,Collection] The parent folders in an array or a collection
     def parent_folders
       parent_feed = Internal::Utils.extract_links(data, 'up', 'application/atom+xml','type' => 'feed')
       unless parent_feed.empty?
@@ -198,6 +235,9 @@ module ActiveCMIS
     end
     cache :parent_folders
 
+    # Files an object in a folder, if the repository supports multi-filing this will be an additional folder, else it will replace the previous folder
+    #
+    # @param [Folder] folder The (replacement) folder
     def file(folder)
       raise Error::Constraint.new("Filing not supported for objects of type: #{self.class.id}") unless self.class.fileable
       @original_parent_folders ||= parent_folders.dup
@@ -208,8 +248,12 @@ module ActiveCMIS
       end
     end
 
-    # FIXME: should throw exception if folder is not actually in @parent_folders?
+    # Removes an object from a given folder or all folders. If the repository does not support unfiling this method throws an error if the document would have no folders left after unfiling.
+    #
+    # @param [Folder,nil] folder
+    # @return [void]
     def unfile(folder = nil)
+      # Conundrum: should this throw exception if folder is not actually among parent_folders?
       raise Error::Constraint.new("Filing not supported for objects of type: #{self.class.id}") unless self.class.fileable
       @original_parent_folders ||= parent_folders.dup
       if repository.capabilities["UnFiling"]
@@ -228,6 +272,8 @@ module ActiveCMIS
       end
     end
 
+    # Empties the locally cached and updated values, updated data is asked from the server the next time a value is requested.
+    # @raise [RuntimeError] if the object is not yet created on the server
     def reload
       if @self_link.nil?
         raise "Can't reload unsaved object"
@@ -239,6 +285,11 @@ module ActiveCMIS
     end
 
     private
+    # Internal value, not meant for common-day use
+    # @private
+    # @return [Hash]
+    attr_reader :used_parameters
+
     def self_link(options = {})
       url = @self_link
       if options.empty?
@@ -274,9 +325,9 @@ module ActiveCMIS
       end
     end
 
-    # Optional parameters:
-    #   - properties: a hash key/definition pairs of properties to be rendered (defaults to all attributes)
-    #   - attributes: a hash key/value pairs used to determine the values rendered (defaults to self.attributes)
+    # @param properties a hash key/definition pairs of properties to be rendered (defaults to all attributes)
+    # @param attributes a hash key/value pairs used to determine the values rendered (defaults to self.attributes)
+    # @param options
     def render_atom_entry(properties = self.class.attributes, attributes = self.attributes, options = {})
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.entry(NS::COMBINED) do
@@ -296,7 +347,9 @@ module ActiveCMIS
       builder.to_xml
     end
 
+    # @private
     attr_writer :updated_attributes
+
     def updated_aspects(checkin = nil)
       result = []
 
@@ -440,8 +493,11 @@ module ActiveCMIS
     end
 
     class << self
+      # The repository this type is defined in
+      # @return [Repository]
       attr_reader :repository
 
+      # @private
       def from_atom_entry(repository, data, parameters = {})
         query = "cra:object/c:properties/c:propertyId[@propertyDefinitionId = '%s']/c:value"
         type_id = data.xpath(query % "cmis:objectTypeId", NS::COMBINED).text
@@ -457,16 +513,23 @@ module ActiveCMIS
         end
       end
 
+      # @private
       def from_parameters(repository, parameters)
         url = repository.object_by_id_url(parameters)
         data = repository.conn.get_atom_entry(url)
         from_atom_entry(repository, data, parameters)
       end
 
+      # A list of all attributes defined on this object
+      # @param [Boolean] inherited Nonfunctional
+      # @return [Hash{String => PropertyDefinition}]
       def attributes(inherited = false)
         {}
       end
 
+      # The key of the CMIS Type
+      # @return [String]
+      # @raise [NotImplementedError] for Object/Folder/Document/Policy/Relationship
       def key
         raise NotImplementedError
       end

@@ -2,6 +2,7 @@ module ActiveCMIS
   class Repository
     attr_reader :logger
 
+    # @private
     def initialize(connection, logger, initial_data) #:nodoc:
       @conn = connection
       @data = initial_data
@@ -11,18 +12,25 @@ module ActiveCMIS
     # Use authentication to access the CMIS repository
     #
     # e.g.: repo.authenticate(:basic, "username", "password")
+    # return [void]
     def authenticate(method, *params)
       conn.authenticate(method, *params)
+      nil
     end
 
+    # The identifier of the repository
+    # @return [String]
     def key
       @key ||= data.xpath('cra:repositoryInfo/c:repositoryId', NS::COMBINED).text
     end
 
+    # @return [String]
     def inspect
       "<#ActiveCMIS::Repository #{key}>"
     end
 
+    # The version of the CMIS standard supported by this repository
+    # @return [String]
     def cmis_version
       # NOTE: we might want to "version" our xml namespaces depending on the CMIS version
       # If we do that we need to make this method capable of not using the predefined namespaces
@@ -31,17 +39,24 @@ module ActiveCMIS
       @cmis_version ||= data.xpath("cra:repositoryInfo/c:cmisVersionSupported", NS::COMBINED).text
     end
 
-    # default parameters: renditionFilter => "*", includeAllowableActions => true, includeACL => true
+    # Finds the object with a given ID in the repository
+    #
+    # @param [String] id
+    # @param parameters A list of parameters used to get (defaults are what you should use)
+    # @return [Object]
     def object_by_id(id, parameters = {"renditionFilter" => "*", "includeAllowableActions" => "true", "includeACL" => true})
       ActiveCMIS::Object.from_parameters(self, parameters.merge("id" => id))
     end
 
+    # @private
     def object_by_id_url(parameters)
       template = pick_template("objectbyid")
       raise "Repository does not define required URI-template 'objectbyid'" unless template
       url = fill_in_template(template, parameters)
     end
 
+    # Finds the type with a given ID in the repository
+    # @return [Class]
     def type_by_id(id)
       @type_by_id ||= {}
       if result = @type_by_id[id]
@@ -73,6 +88,7 @@ module ActiveCMIS
     end
 
     # A collection containing the CMIS base types supported by this repository
+    # @return [Collection<Class>]
     def base_types
       @base_types ||= begin
                         query = "app:collection[cra:collectionType[child::text() = 'types']]/@href"
@@ -90,6 +106,7 @@ module ActiveCMIS
     end
 
     # An array containing all the types used by this repository
+    # @return [<Class>]
     def types
       @types ||= base_types.map do |t|
         t.all_subtypes
@@ -98,35 +115,36 @@ module ActiveCMIS
 
     # Returns a collection with the changes since the given changeLogToken.
     #
-    # Completely uncached
+    # Completely uncached so use with care
     #
-    # Parameters: a Hash containing parameters, valid keys are:
-    # - filter
-    # - changeLogToken
-    # - maxItems
-    # - includeACL
-    # - includePolicyIds
-    # - includeProperties
-    #
-    # All parameters are optional
-    def changes(parameters = {})
+    # @param options Keys can be Symbol or String, all options are optional
+    # @option options [String] filter
+    # @option options [String] changeLogToken A token indicating which changes you already know about
+    # @option options [Integer] maxItems For paging
+    # @option options [Boolean] includeAcl
+    # @option options [Boolean] includePolicyIds
+    # @option options [Boolean] includeProperties
+    # @return [Collection]
+    def changes(options = {})
       query = "at:link[@rel = '#{Rel[cmis_version][:changes]}']/@href"
       link = data.xpath(query, NS::COMBINED)
       if link = link.first
-        link = Internal::Utils.append_parameters(link.to_s, parameters)
+        link = Internal::Utils.append_parameters(link.to_s, options)
         Collection.new(self, link)
       end
     end
 
     # Returns a collection with the results of a query (if supported by the repository)
     #
-    # Parameters: a Hash containing parameters, valid keys (always strings) are:
-    # - searchAllVersions (true, false (default))
-    # - includeAllowableActions (true, false (default))
-    # - includeRelationships (none, source, target, both)
-    # - renditionFilter ('cmis:none' (default), '*' (all), comma-separated list of rendition kinds or mimetypes)
-    # - maxItems (per page, this is not the same as a limit on the query)
-    # - skipCount (same here, is for paging purposes, defaults to 0)
+    # @param [#to_s] query_string A query in the CMIS SQL format (unescaped in any way)
+    # @param [{Symbol => ::Object}] options Optional configuration for the query
+    # @option options [Boolean] :searchAllVersions (false)
+    # @option options [Boolean] :includeAllowableActions (false)
+    # @option options ["none","source","target","both"] :includeRelationships
+    # @option options [String] :renditionFilter ('cmis:none') Possible values: 'cmis:none', '*' (all), comma-separated list of rendition kinds or mimetypes
+    # @option options [Integer] :maxItems used for paging
+    # @option options [Integer] :skipCount (0) used for paging
+    # @return [Collection]
     def query(query_string, options = {})
       raise "This repository does not support queries" if capabilities["Query"] == "none"
       # For the moment we make no difference between metadataonly,fulltextonly,bothseparate and bothcombined
@@ -146,17 +164,20 @@ module ActiveCMIS
       Collection.new(self, url)
     end
 
+    # The root folder of the repository (as defined in the CMIS standard)
+    # @return [Folder]
     def root_folder
       @root_folder ||= object_by_id(data.xpath("cra:repositoryInfo/c:rootFolderId", NS::COMBINED).text)
     end
 
+    # Returns an Internal::Connection object, normally you should not use this directly
+    # @return [Internal::Connection]
     def conn
       @conn ||= Internal::Connection.new
     end
 
-    # :section: Capabilities
-
-    # A hash containing all capabilities of the repository
+    # Describes the capabilities of the repository
+    # @return [Hash{String => String,Boolean}] The hash keys have capability cut of their name
     def capabilities
       @capabilities ||= begin
                           capa = {}
@@ -172,7 +193,7 @@ module ActiveCMIS
                         end
     end
 
-    # Responds with true if Private Working Copies are updateable, fals otherwise
+    # Responds with true if Private Working Copies are updateable, false otherwise
     # (if false the PWC object can only be updated during the checkin)
     def pwc_updatable?
       capabilities["PWCUpdatable"]
@@ -184,21 +205,21 @@ module ActiveCMIS
       capabilities["VersionSpecificFiling"]
     end
 
-    # :section: ACLs
-    # The code in this section is used to describe the ACL configuration of the repository.
-    # This includes listing the possible values for acl permissions and listing which principal names are used to describe :anonymous and :world
-
     # returns true if ACLs can at least be viewed
     def acls_readable?
       ["manage", "discover"].include? capabilities["ACL"]
     end
 
+    # You should probably not use this directly, use :anonymous instead where a user name is required
+    # @return [String]
     def anonymous_user
       if acls_readable?
         data.xpath('cra:repositoryInfo/c:principalAnonymous', NS::COMBINED).text
       end
     end
 
+    # You should probably not use this directly, use :world instead where a user name is required
+    # @return [String]
     def world_user
       if acls_readable?
         data.xpath('cra:repositoryInfo/c:principalAnyone', NS::COMBINED).text
