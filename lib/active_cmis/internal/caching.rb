@@ -45,6 +45,7 @@ module ActiveCMIS
           reloadable
         end
 
+        private
         def reloadable
           class_eval <<-RUBY, __FILE__, __LINE__
             def __reload
