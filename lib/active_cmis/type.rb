@@ -22,34 +22,48 @@ module ActiveCMIS
 
       klass = ::Class.new(superclass) do
         extend ActiveCMIS::Type::ClassMethods
+        include ActiveCMIS::Type::InstanceMethods
 
         @repository = repository
         @conn = param_conn
         @data = klass_data
         @self_link = klass_data.xpath("at:link[@rel = 'self']/@href", NS::COMBINED).text
 
-        def initialize(rep = nil, data = nil, parameters = {})
-          case rep
-          when Hash
-            attributes = rep
-            rep = nil
-            data = nil # Force data and parameters to be empty in that case (NOTE: assert may be better?)
-            parameters = {}
-          when NilClass
-          else
-            if rep != self.class.repository
-              raise "Trying to create element in different repository than type"
-            end
-          end
-          super(rep || self.class.repository, data, parameters)
-          unless attributes.nil?
-            update(attributes)
-          end
-        end
       end
       klass
     end
 
+    # Instance Methods on CMIS Types
+    module InstanceMethods
+      # Creates a new CMIS Object
+      # @overload initialize(attributes)
+      #   @param [Hash] attributes Attributes for a newly created object of the current type
+      #   @return [Object]
+      def initialize(rep = nil, data = nil, parameters = {})
+        case rep
+        when Hash
+          attributes = rep
+          rep = nil
+          data = nil # Force data and parameters to be empty in that case (NOTE: assert may be better?)
+          parameters = {}
+        when NilClass
+        else
+          if rep != self.class.repository
+            raise "Trying to create element in different repository than type"
+          end
+        end
+        super(rep || self.class.repository, data, parameters)
+        unless attributes.nil?
+          update(attributes)
+        end
+      end
+    end
+
+    # Class Methods on CMIS Types
+    #
+    # The following info is also available:
+    #  id, local_name, local_namespace, display_name, query_name, description, base_id, parent_id, creatable, fileable,
+    #  queryable, fulltext_indexed, controllable_policy, controllable_acl, versionable, content_stream_allowed
     module ClassMethods
       include Internal::Caching
 
