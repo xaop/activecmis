@@ -1,9 +1,15 @@
 module ActiveCMIS
   class Rendition
-    # == Alert
-    # Be aware that size and format are not necessarily filled in, and not necessarily correct either if filled in
-    attr_reader :repository, :size, :rendition_kind, :format
+    # @return [Repository]
+    attr_reader :repository
+    # @return [Numeric,nil] Size of the rendition, may not be given or misleading
+    attr_reader :size
+    # @return [String,nil]
+    attr_reader :rendition_kind
+    # @return [String,nil] The format is equal to the mime type, but may be unset or misleading
+    attr_reader :format
 
+    # @private
     def initialize(repository, link)
       @repository = repository
 
@@ -21,19 +27,20 @@ module ActiveCMIS
       @link = link # FIXME: For debugging purposes only, remove
     end
 
+    # Used to differentiate between rendition and primary content
     def rendition?
       @rel == "alternate"
     end
+    # Used to differentiate between rendition and primary content
     def primary?
       @rel.nil?
     end
 
     # Returns a hash with the name of the file to which was written, the lenthe, and the content type
     #
-    #
-    # FIXME: flexibility/efficiency
-    # flexibility: allow name to unspecified
-    # efficiency: currently the whole stream gets loaded in memory before it's written to a file, fix this
+    # *WARNING*: this loads the complete file in memory and dumps it at once, this should be fixed
+    # @param [String] filename Location to store the content.
+    # @return [Hash]
     def get_file(file_name)
       if @url
         response = repository.conn.get_response(@url)

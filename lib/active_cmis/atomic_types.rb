@@ -20,9 +20,6 @@ module ActiveCMIS
       end
     end
 
-    # FIXME: account for <cmis:value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
-    #        current result => ""/0/... should be nil
-    # Obviously it's the same the other way around too
     class String < CommonBase
       attr_reader :max_length
       def initialize(max_length)
@@ -132,7 +129,7 @@ module ActiveCMIS
         end
       end
       def _rb2cmis(xml, value)
-        # FIXME: respect resolution
+        # FIXME: respect resolution, I still have to find out how to do that
         xml["c"].value(value.strftime("%Y-%m-%dT%H:%M:%S%Z"))
       end
       def can_handle?(value)

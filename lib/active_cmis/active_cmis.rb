@@ -1,5 +1,6 @@
 module ActiveCMIS
   # Default logger: Outputs to STDOUT and has level set to DEBUG
+  # @return [Logger]
   def self.default_logger
     @default_logger ||= Logger.new(STDOUT)
   end
@@ -20,6 +21,7 @@ module ActiveCMIS
   # The destination of the logger output can be set with log_file (defaults to STDOUT), (should not contain ~)
   #
   # Default locations for the config file are: ./cmis.yml and .cmis.yml in that order
+  # @return [Repository]
   def self.load_config(config_name, file = nil)
     if file.nil?
       ["cmis.yml", File.join(ENV["HOME"], ".cmis.yml")].each do |sl|

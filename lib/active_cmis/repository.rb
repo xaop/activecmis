@@ -1,5 +1,6 @@
 module ActiveCMIS
   class Repository
+    # @return [Logger] A logger to which debug output and so on is sent
     attr_reader :logger
 
     # @private
@@ -12,7 +13,7 @@ module ActiveCMIS
     # Use authentication to access the CMIS repository
     #
     # e.g.: repo.authenticate(:basic, "username", "password")
-    # return [void]
+    # @return [void]
     def authenticate(method, *params)
       conn.authenticate(method, *params)
       nil
@@ -227,6 +228,7 @@ module ActiveCMIS
     end
 
     private
+    # @private
     attr_reader :data
 
     def pick_template(name, options = {})

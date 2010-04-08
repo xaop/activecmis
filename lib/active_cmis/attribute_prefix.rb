@@ -1,12 +1,18 @@
 module ActiveCMIS
+  # A class used to get and set attributes that have a prefix like cmis: in their attribute IDs
   class AttributePrefix
-    attr_reader :object, :prefix
+    # @return [Object] The object that the attribute getting and setting will take place on
+    attr_reader :object
+    # @return [String]
+    attr_reader :prefix
 
+    # @private
     def initialize(object, prefix)
       @object = object
       @prefix = prefix
     end
 
+    # For known attributes will act as a getter and setter
     def method_missing(method, *parameters)
       string = method.to_s
       if string[-1] == ?=

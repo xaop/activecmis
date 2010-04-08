@@ -1,6 +1,8 @@
 module ActiveCMIS
   module Internal
+    # @private
     module Utils
+      # @private
       def self.escape_url_parameter(parameter)
         control = "\x00-\x1F\x7F"
         space   = " "
@@ -14,6 +16,7 @@ module ActiveCMIS
       #
       # This method does not perform any encoding on the paramter or key values.
       # This method does not check the existing parameters for duplication in keys
+      # @private
       def self.append_parameters(uri, parameters)
         uri       = case uri
                     when String; string = true; URI.parse(uri)
@@ -28,11 +31,13 @@ module ActiveCMIS
       end
 
       # FIXME?? percent_encode and escape_url_parameter serve nearly the same purpose, replace one?
+      # @private
       def self.percent_encode(string)
         URI.escape(string, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
       end
 
       # Returns id if id is already an object, object_by_id if id is a string, nil otherwise
+      # @private
       def self.string_or_id_to_object(id)
         case id
         when String; repository.object_by_id(id)
@@ -40,6 +45,7 @@ module ActiveCMIS
         end
       end
 
+      # @private
       def self.extract_links(xml, rel, type_main = nil, type_params = {})
         links = xml.xpath("at:link[@rel = '#{rel}']", NS::COMBINED)
 

@@ -1,9 +1,16 @@
 module ActiveCMIS
+
+  # A Collection represents an atom feed, and can be used to lazily load data through paging
   class Collection
     include Internal::Caching
     include ::Enumerable
 
-    attr_reader :repository, :url
+    # The repository that contains this feed
+    # @return [Repository]
+    attr_reader :repository
+    # The basic link that represents the beginning of this feed
+    # @return [URI]
+    attr_reader :url
 
     def initialize(repository, url, first_page = nil, &map_entry)
       @repository = repository
@@ -23,6 +30,7 @@ module ActiveCMIS
       end
     end
 
+    # @return [Integer] The length of the collection
     def length
       receive_page
       if @length.nil?
@@ -44,6 +52,7 @@ module ActiveCMIS
       @elements.empty?
     end
 
+    # @return [Array]
     def to_a
       while @next
         receive_page
@@ -81,43 +90,50 @@ module ActiveCMIS
       at(0)
     end
 
-    # Warning: this is inefficiënt at the moment
+    # Gets all object and returns last
     def last
       at(-1)
     end
 
+    # @return [Array]
     def each
       length.times { |i| yield self[i] }
     end
 
+    # @return [Array]
     def reverse_each
       (length - 1).downto(0) { |i| yield self[i] }
     end
 
+    # @return [String]
     def inspect
       "#<Collection %s>" % url
     end
 
+    # @return [String]
     def to_s
       to_a.to_s
     end
 
+    # @return [Array]
     def uniq
       to_a.uniq
     end
 
+    # @return [Array]
     def sort
       to_a.sort
     end
 
+    # @return [Array]
     def reverse
       to_a.reverse
     end
 
+    # @return [void]
     def reload
       @pages = []
       @elements = []
-      # FIXME: return [:pages, :elements] + __reload? but pages and elements are internal
       @next = @url
       __reload
     end

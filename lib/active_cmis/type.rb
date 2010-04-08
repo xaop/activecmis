@@ -1,5 +1,6 @@
 module ActiveCMIS
   module Type
+    # @private
     def self.create(param_conn, repository, klass_data)
       parent_id = klass_data.xpath("cra:type/c:parentId/text()", NS::COMBINED)
       superclass = if parent = parent_id.first
@@ -71,6 +72,8 @@ module ActiveCMIS
         :parent_id, :creatable, :fileable, :queryable, :fulltext_indexed, :controllable_policy, :controllable_acl,
         :versionable, :content_stream_allowed
 
+      # @param [Boolean] inherited (false) *Ignored*
+      # @return [{String => PropertyDefinition}] A list of propery definitions for all properties on the type
       def attributes(inherited = false)
         load_from_data unless defined?(@attributes)
         if inherited && superclass.respond_to?(:attributes)
@@ -80,11 +83,12 @@ module ActiveCMIS
         end
       end
 
-      # defaults to all attributes (inherited and non-inherited)
+      # @return [{String => PropertyDefinition}] A list of all required definitions (includes inherited attributes)
       def required_attributes
         attributes(true).reject {|key, value| !value.required}
       end
 
+      # @return [<String>] A list of prefixes that can be used for adressing attributes (like cmis:)
       def attribute_prefixes
         @prefixes ||= attributes(true).keys.map do |key|
           if key =~ /^([^:]+):/
@@ -93,19 +97,23 @@ module ActiveCMIS
         end.compact.uniq
       end
 
+      # @return [void]
       def reload
         remove_instance_variable(:@attributes) if defined? @attributes
         [:attributes] + __reload # Could also do if defined?(super) then super else __reload end, but we don't do anything but remove_instance_variable @attributes in superclasses anyway
       end
 
+      # @return [String]
       def inspect
         "#<#{repository.key}::Class #{key}>"
       end
 
+      # @return [String] The CMIS ID of the type
       def key
         @key ||= data.xpath("cra:type/c:id", NS::COMBINED).text
       end
 
+      # @return [Collection<Class>] All direct subtypes (1 level deep)
       def subtypes
         types_feed = Internal::Utils.extract_links(data, 'down', 'application/atom+xml', 'type' => 'feed')
         raise "No subtypes link for #{id}" if types_feed.empty?
@@ -117,6 +125,7 @@ module ActiveCMIS
       end
       cache :subtypes
 
+      # @return [Array<Class>] All subtypes
       def all_subtypes
         subtypes.map do |t|
           t.all_subtypes
@@ -125,6 +134,7 @@ module ActiveCMIS
       cache :all_subtypes
 
       private
+      # @private
       attr_reader :self_link, :conn
       def data
         @data ||= conn.get_atom_entry(self_link)

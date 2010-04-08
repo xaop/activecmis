@@ -1,11 +1,7 @@
 module ActiveCMIS
   class Document < ActiveCMIS::Object
-    # :section: Content
-    # Documents can have an attached content stream and renditions.
-    # Renditions can't be altered via CMIS, the content stream may be editable
-
     # Returns an ActiveCMIS::Rendition to the content stream or nil if there is none
-    # TODO: test that interpretion of different possibilities is correct
+    # @return [Rendition]
     def content_stream
       if content = data.xpath("at:content", NS::COMBINED).first
         if content['src']
@@ -31,6 +27,7 @@ module ActiveCMIS
     cache :content_stream
 
     # Will reload if renditionFilter was not set or cmis:none, but not in other circumstances
+    # @return [Array<Rendition>]
     def renditions
       filter = used_parameters["renditionFilter"]
       if filter.nil? || filter == "cmis:none"
@@ -44,14 +41,14 @@ module ActiveCMIS
     end
     cache :renditions
 
-
-    # options for content can be :file => filename or :data => binary_data
-    # :overwrite defaults to true, if false the content of the document won't be overwritten
-    # :mime_type => mime_type
+    # Sets new content to be uploaded, does not alter values you will get from content_stream (for the moment)
+    # @param [Hash] options A hash containing exactly one of :file or :data
+    # @option options [String] :file The name of a file to upload
+    # @option options [#read] :data Data you want to upload (if #length is defined it should give the total length that can be read)
+    # @option options [Boolean] :overwrite (true) Whether the contents should be overwritten (ignored in case of checkin)
+    # @option options [String] :mime_type
     #
-    # This returns the document with the new content, this may be a new version in the version series and as such may not be equal to self
-    #
-    # Warning: this doesn't update the content stream you get from content_stream (because it is cached)
+    # @return [void]
     def set_content_stream(options)
       if key.nil?
         if self.class.content_stream_allowed == "notallowed"
@@ -68,11 +65,9 @@ module ActiveCMIS
       @updated_contents = options
     end
 
-    # :section: Versioning
-    # Documents can be versionable, other types of objects are never versionable
-
     # Returns all documents in the version series of this document.
     # Uses self to represent the version of this document
+    # @return [Collection<Document>, Array(self)]
     def versions
       link = data.xpath("at:link[@rel = 'version-history']/@href", NS::COMBINED)
       if link = link.first
@@ -86,6 +81,7 @@ module ActiveCMIS
 
     # Returns self if this is the latest version
     # Note: There will allways be a latest version in a version series
+    # @return [Document]
     def latest_version
       link = data.xpath("at:link[@rel = 'current-version']/@href", NS::COMBINED)
       if link.first
@@ -99,6 +95,7 @@ module ActiveCMIS
 
     # Returns self if this is the working copy
     # Returns nil if there is no working copy
+    # @return [Document]
     def working_copy
       link = data.xpath("at:link[@rel = 'working-copy']/@href", NS::COMBINED)
       if link.first
@@ -126,11 +123,9 @@ module ActiveCMIS
       !data.xpath("at:link[@rel = 'via']", NS::COMBINED).empty?
     end
 
-    # Returns nil if the version series has no PWC
+    # Returns information about the checked out status of this document
     #
-    # If a document is checked out then a hash is returned
-    # {:by => name, :id => id_of_pwc }
-    # Depending on the repository both values may be unset
+    # @return [Hash,nil] Keys are :by for the owner of the PWC and :id for the CMIS ID, both can be unset according to the spec
     def version_series_checked_out
       attributes = self.attributes
       if attributes["cmis:isVersionSeriesCheckedOut"]
@@ -154,6 +149,7 @@ module ActiveCMIS
     #
     # The content stream of the PWC may be identical to that of the document
     # that was checked out, or it may be unset.
+    # @return [Document] The checked out version of this document
     def checkout
       body = render_atom_entry(self.class.attributes.reject {|k,v| k != "cmis:objectId"})
 
@@ -173,6 +169,7 @@ module ActiveCMIS
     end
 
     # This action may not be permitted (query allowable_actions to see whether it is permitted)
+    # @return [void]
     def cancel_checkout
       if !self.class.versionable
         raise Error::Constraint.new("Object is not versionable, can't cancel checkout")
@@ -187,7 +184,7 @@ module ActiveCMIS
     # You can optionally give a list of attributes that need to be set.
     #
     # This operation exists only for Private Working Copies
-    # If the operation succeeds this object becomes the latest in the version series
+    # @return [Document] The final version that results from the checkin
     def checkin(major = true, comment = "", updated_attributes = {})
       if working_copy?
         update(updated_attributes)
@@ -201,6 +198,7 @@ module ActiveCMIS
       end
     end
 
+    # @return [void]
     def reload
       @updated_contents = nil
       super

@@ -78,6 +78,7 @@ module ActiveCMIS
     end
 
     # Shorthand for the cmis:name of an object
+    # @return [String]
     def name
       attribute('cmis:name')
     end
@@ -149,6 +150,7 @@ module ActiveCMIS
     #
     # *WARNING*: because of the way CMIS is constructed the save operation is not atomic if updates happen to different aspects of the object
     # (parent folders, attributes, content stream, acl), we can't work around this because CMIS lacks transactions
+    # @return [Object]
     def save
       # FIXME: find a way to handle errors?
       # FIXME: what if multiple objects are created in the course of a save operation?
@@ -238,6 +240,7 @@ module ActiveCMIS
     # Files an object in a folder, if the repository supports multi-filing this will be an additional folder, else it will replace the previous folder
     #
     # @param [Folder] folder The (replacement) folder
+    # @return [void]
     def file(folder)
       raise Error::Constraint.new("Filing not supported for objects of type: #{self.class.id}") unless self.class.fileable
       @original_parent_folders ||= parent_folders.dup
@@ -274,6 +277,7 @@ module ActiveCMIS
 
     # Empties the locally cached and updated values, updated data is asked from the server the next time a value is requested.
     # @raise [RuntimeError] if the object is not yet created on the server
+    # @return [void]
     def reload
       if @self_link.nil?
         raise "Can't reload unsaved object"

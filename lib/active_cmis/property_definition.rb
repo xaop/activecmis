@@ -1,10 +1,13 @@
 module ActiveCMIS
   class PropertyDefinition
+    # @return [String]
     attr_reader :object_type, :id, :local_name, :local_namespace, :query_name,
       :display_name, :description, :cardinality, :property_type, :updatability,
-      :inherited, :required, :queryable, :orderable, :choices, :open_choice,
       :default_value
+    # @return [Boolean]
+    attr_reader :inherited, :required, :queryable, :orderable, :choices, :open_choice
 
+    # @private
     def initialize(object_type, property_definition)
       @object_type = object_type
       @property_definition = property_definition
@@ -80,19 +83,23 @@ module ActiveCMIS
       end
     end
 
+    # @return [Boolean] Returns true if the attribute can have multiple values
     def repeating
       cardinality == "multi"
     end
 
+    # @return [String]
     def inspect
       "#{object_type.display_name}:#{id} => #{property_type}#{"[]" if repeating}"
     end
     alias to_s inspect
 
+    # @return [String]
     def property_name
       "property#{property_type}"
     end
 
+    # @private
     def render_property(xml, value)
       xml["c"].send(property_name, "propertyDefinitionId" => id) {
         if repeating
@@ -105,6 +112,7 @@ module ActiveCMIS
       }
     end
 
+    # @private
     # FIXME: should probably also raise error for out of bounds case
     def validate_ruby_value(value)
       if updatability == "readonly" # FIXME: what about oncreate?
@@ -122,6 +130,7 @@ module ActiveCMIS
       end
     end
 
+    # @private
     def extract_property(properties)
       elements = properties.children.select do |n|
         n.node_name == property_name &&
@@ -154,9 +163,11 @@ module ActiveCMIS
       end
     end
 
+    # @return [Logger] The logger of the repository
     def logger
       repository.logger
     end
+    # @return [Repository] The repository that the CMIS type is defined in
     def repository
       object_type.repository
     end

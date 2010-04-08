@@ -1,12 +1,23 @@
 module ActiveCMIS
   module Internal
     class Connection
-      attr_reader :user, :logger
+      # @return [String, nil] The user that is used with the authentication to the server
+      attr_reader :user
+      # @return [Logger] A logger used to send debug and info messages
+      attr_reader :logger
 
+      # @param [Logger] Initialize with a logger of your choice
       def initialize(logger)
         @logger = logger || ActiveCMIS.default_logger
       end
 
+      # Use authentication to access the CMIS repository
+      #
+      # @param method [Symbol] Currently only :basic is supported
+      # @param params The parameters that need to be sent to the Net::HTTP authentication method used, username and password for basic authentication
+      # @return [void]
+      # @example Basic authentication
+      #   repo.authenticate(:basic, "username", "password")
       def authenticate(method, *params)
         case method
         when :basic
@@ -18,6 +29,9 @@ module ActiveCMIS
 
       # The return value is the unparsed body, unless an error occured
       # If an error occurred, exceptions are thrown (see _ActiveCMIS::Exception
+      #
+      # @private
+      # @return [String] returns the body of the request, unless an error occurs
       def get(url)
         uri = normalize_url(url)
 
@@ -26,6 +40,8 @@ module ActiveCMIS
       end
 
       # Does not throw errors, returns the full response (includes status code and headers)
+      # @private
+      # @return [Net::HTTP::Response]
       def get_response(url)
         logger.debug "GET (response) #{url}"
         uri = normalize_url(url)
@@ -38,15 +54,20 @@ module ActiveCMIS
       end
 
       # Returns the parsed body of the result
+      # @private
+      # @return [Nokogiri::XML::Document]
       def get_xml(url)
         Nokogiri::XML.parse(get(url))
       end
 
+      # @private
+      # @return [Nokogiri::XML::Node]
       def get_atom_entry(url)
         # FIXME: add validation that first child is really an entry
         get_xml(url).child
       end
 
+      # @private
       def put(url, body, headers = {})
         uri = normalize_url(url)
 
@@ -56,6 +77,7 @@ module ActiveCMIS
         handle_request(uri, req)
       end
 
+      # @private
       def post(url, body, headers = {})
         uri = normalize_url(url)
 
@@ -66,6 +88,7 @@ module ActiveCMIS
       end
 
       # Does not throw errors, returns the full response (includes status code and headers)
+      # @private
       def post_response(url, body, headers = {})
         logger.debug "POST (response) #{url}"
         uri = normalize_url(url)
@@ -80,6 +103,7 @@ module ActiveCMIS
         response
       end
 
+      # @private
       def delete(url)
         uri = normalize_url(url)
 

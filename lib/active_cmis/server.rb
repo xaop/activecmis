@@ -2,8 +2,12 @@ module ActiveCMIS
   # This class is used to manage different CMIS servers.
   class Server
     include Internal::Caching
-    attr_reader :endpoint, :logger
+    # @return [URI] The location of the server
+    attr_reader :endpoint
+    # @return [Logger] A default logger for derived repositories
+    attr_reader :logger
 
+    # @return [Server] Cached by endpoint and logger
     def self.new(endpoint, logger = nil)
       endpoint = case endpoint
                  when URI; endpoint
@@ -12,13 +16,16 @@ module ActiveCMIS
       endpoints[[endpoint, logger]] ||= super(endpoint, logger || ActiveCMIS.default_logger)
     end
 
+    # @return [{(URI, Logger) => Server}] The cache of known Servers
     def self.endpoints
       @endpoints ||= {}
     end
 
+    # @return [String]
     def inspect
       "Server #{@endpoint}"
     end
+    # @return [String]
     def to_s
       "Server " + @endpoint.to_s + " : " + repositories.map {|h| h[:name] + "(#{h[:id]})"}.join(", ")
     end
@@ -31,9 +38,9 @@ module ActiveCMIS
       @logger = logger
     end
 
-    # Use authentication to access the CMIS repository
-    #
-    # e.g.: repo.authenticate(:basic, "username", "password")
+    # @param (see ActiveCMIS::Internal::Connection#authenticate)
+    # @see Internal::Connection#authenticate
+    # @return [void]
     def authenticate(method, *params)
       conn.authenticate(method, *params)
     end
@@ -41,6 +48,8 @@ module ActiveCMIS
     # Returns the _Repository identified by the ID
     #
     # Cached by the repository_id, no way to reset cache yet
+    # @param [String] repository_id
+    # @return [Repository]
     def repository(repository_id)
       cached_repositories[repository_id] ||= begin
                                                repository_data = repository_info.
@@ -55,7 +64,7 @@ module ActiveCMIS
 
     # Lists all the available repositories
     #
-    # Returns an Array of Hashes containing :id and :name
+    # @return [<{:id, :name} => String>]
     def repositories
       repositories = repository_info.xpath("/app:service/app:workspace/cra:repositoryInfo", NS::COMBINED)
       repositories.map {|ri| next {:id => ri.xpath("ns:repositoryId", "ns" => NS::CMIS_CORE).text,

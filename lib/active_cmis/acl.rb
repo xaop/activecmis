@@ -1,10 +1,20 @@
 module ActiveCMIS
   # ACLs belong to a document and have no identity of their own
+  #
+  # = Updating:
+  # The effect on documents other than the one this ACL belongs to depends
+  # on the repository.
+  #
+
   class Acl
     include Internal::Caching
 
-    attr_reader :document, :repository
+    # @return [Object] The document or object from which we got this ACL
+    attr_reader :document
+    # @return [Repository]
+    attr_reader :repository
 
+    # @private
     def initialize(repository, document, link, _data = nil)
       @repository = repository
       @document   = document
@@ -15,8 +25,8 @@ module ActiveCMIS
       @data = _data if _data
     end
 
-    # Returns an array with all Aclentries.
-    #
+    # Returns an array with all Acl entries.
+    # @return [Array<AclEntry>]
     def permissions
       data.xpath("c:permission", NS::COMBINED).map do |permit|
         principal      = nil
@@ -60,41 +70,39 @@ module ActiveCMIS
                  end
     end
 
-    # :section: Updating ACLs
-    # The effect on documents other than the one this ACL belongs to depends
-    # on the repository.
-    #
-    # The user can be "cmis:user" to indicate the currently logged in user
-    # For :anonymous and :world you can use both the the active_cmis symbol
-    # or the name used by the CMIS repository
-
-    def grant_permission(user, *new_permissions)
+    # @param [String, :anonymous, :world] user Can be "cmis:user" to indicate the currently logged in user.
+    # For :anonymous and :world you can use both the the active_cmis symbol or the name used by the CMIS repository
+    # @param permissions (see ActiveCMIS::AclEntry#initialize)
+    # @return [void]
+    def grant_permission(user, *permissions)
       principal = convert_principal(user)
 
-      relevant = permissions.select {|p| p.principal == principal && p.direct?}
+      relevant = self.permissions.select {|p| p.principal == principal && p.direct?}
       if relevant = relevant.first
-        permissions.delete relevant
-        new_permissions.concat(relevant.permissions)
+        self.permissions.delete relevant
+        permissions.concat(relevant.permissions)
       end
 
       @updated = true
-      permissions << AclEntry.new(principal, new_permissions, true)
+      self.permissions << AclEntry.new(principal, permissions, true)
     end
 
-    # Note: it is untested how this works together with direct == false
-    def revoke_permission(user, *new_permissions)
+    # @param (see ActiveCMIS::Acl#grant_permission)
+    # @return [void]
+    def revoke_permission(user, *permissions)
       principal = convert_principal(user)
 
-      keep = permissions.reject {|p| p.principal == principal && p.permissions.any? {|t| new_permissions.include? t} }
+      keep = self.permissions.reject {|p| p.principal == principal && p.permissions.any? {|t| permissions.include? t} }
 
-      relevant = permissions.select {|p| p.principal == principal && p.permissions.any? {|t| new_permissions.include? t} }
-      changed  = relevant.map {|p| AclEntry.new(principal, p.permissions - new_permissions, p.direct?) }
+      relevant = self.permissions.select {|p| p.principal == principal && p.permissions.any? {|t| permissions.include? t} }
+      changed  = relevant.map {|p| AclEntry.new(principal, p.permissions - permissions, p.direct?) }
 
       @updated = true
       @permissions = keep + changed
     end
 
-    # Note: it is untested how this works together with direct == false
+    # @param user (see ActiveCMIS::Acl#grant_permission)
+    # @return [void]
     def revoke_all_permissions(user)
       principal = convert_principal(user)
       @updated = true
@@ -102,6 +110,7 @@ module ActiveCMIS
     end
 
     # Needed to actually execute changes on the server, this method is also executed when you save an object with a modified ACL
+    # @return [void]
     def apply
       body = Nokogiri::XML::Builder.new do |xml|
         xml.acl("xmlns" => NS::CMIS_CORE) do
@@ -125,6 +134,7 @@ module ActiveCMIS
       @updated
     end
 
+    # @return [void]
     def reload
       @updated = false
       @exact = nil

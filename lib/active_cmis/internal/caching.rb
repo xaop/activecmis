@@ -5,7 +5,14 @@ module ActiveCMIS
         cl.extend ClassMethods
       end
 
+      # A module for internal use only.
       module ClassMethods
+
+        # Creates a proxy method for the given method names that caches the result.
+        #
+        # Parameters are passed and ignored, cached values will be returned regardless of the parameters.
+        # @param [Symbol, <Symbol>] Names of methods that will be cached
+        # @return [void]
         def cache(*names)
           (@cached_methods ||= []).concat(names).uniq!
           names.each do |name|
@@ -30,6 +37,12 @@ module ActiveCMIS
           reloadable
         end
 
+        # Creates methods to retrieve attributes with the given names.
+        #
+        # If the given attribute does not yet exist the method #load_from_data will be called
+        #
+        # @param [Symbol, <Symbol>] Names of desired attributes
+        # @return [void]
         def cached_reader(*names)
           (@cached_methods ||= []).concat(names).uniq!
           names.each do |name|

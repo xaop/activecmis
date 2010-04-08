@@ -1,7 +1,6 @@
 - Create a(n easier) way to get only the non-inherited attributes of a type
-- improve documentation
 - improve use of correct Exceptions: i.e. don't throw RuntimeError anymore and try to use correct exceptions when receiving errors from server
-- Go over all FIXME/TODO/XXX messages in code to see what to do about them
-- Write automated tests?
 - improve support for queries (e.g. allow interface such as the with_ATTR_NAME way of ActiveDCTM)
 - Improve the guidance of Exception by not throwing string-exceptions where CMIS exceptions would work
+- For downloading renditions/primary content: allow streaming (i.e. don't load everything in memory at once)
+- For getting the content: it should not be necessary to pick a file, if no filename is given a temporary file should be created (e.g. in /tmp)
