@@ -47,17 +47,18 @@ module ActiveCMIS
 
     # An indicator that the ACL fully describes the permissions for this object.
     # This means that there are no other security constraints.
-    def exact
-      value = data.xpath("c:exact", NS::COMBINED)
-      if value.empty?
-        false
-      elsif value.length == 1
-        AtomicType::Boolean.xml_to_bool(value.first.text)
-      else
-        raise "Unexpected multiplicity of exactness ACL"
-      end
+    def exact?
+      @exact ||= begin
+                   value = data.xpath("c:exact", NS::COMBINED)
+                   if value.empty?
+                     false
+                   elsif value.length == 1
+                     AtomicType::Boolean.xml_to_bool(value.first.text)
+                   else
+                     raise "Unexpected multiplicity of exactness ACL"
+                   end
+                 end
     end
-    cache :exact
 
     # :section: Updating ACLs
     # The effect on documents other than the one this ACL belongs to depends
@@ -119,12 +120,14 @@ module ActiveCMIS
       reload
     end
 
-    def updated
+    # True if there are local changes to the ACL
+    def updated?
       @updated
     end
 
     def reload
       @updated = false
+      @exact = nil
       __reload
     end
 
