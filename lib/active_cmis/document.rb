@@ -44,7 +44,6 @@ module ActiveCMIS
     end
     cache :renditions
 
-    attr_reader :updated_contents
 
     # options for content can be :file => filename or :data => binary_data
     # :overwrite defaults to true, if false the content of the document won't be overwritten
@@ -108,11 +107,6 @@ module ActiveCMIS
       else
         nil
       end
-    end
-
-    # This may return nil if there are no major versions
-    # TODO: implement (no direct link relation exists)
-    def latest_major_version
     end
 
     def latest?
@@ -212,6 +206,9 @@ module ActiveCMIS
       super
     end
 
+    private
+    attr_reader :updated_contents
+
     # Optional parameters:
     #   - properties: a hash key/definition pairs of properties to be rendered (defaults to all attributes)
     #   - attributes: a hash key/value pairs used to determine the values rendered (defaults to self.attributes)
@@ -242,7 +239,6 @@ module ActiveCMIS
       builder.to_xml
     end
 
-    private
 
     def updated_aspects(checkin = nil)
       if working_copy? && !(checkin || repository.pwc_ubdatable)
