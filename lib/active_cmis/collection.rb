@@ -39,9 +39,9 @@ module ActiveCMIS
     alias size length
     cache :length
 
-    # FIXME: can be more efficient than this
     def empty?
-      length == 0
+      at(0)
+      @elements.empty?
     end
 
     def to_a
