@@ -1,4 +1,3 @@
-#!markdown
 # ActiveCMIS Release 0.1.0 #
 **Homepage**:  <http://xaop.com/labs/activecmis>   
 **Git**:       <http://github.com/xaop/activecmis>   
