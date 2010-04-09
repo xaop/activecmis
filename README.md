@@ -12,7 +12,9 @@ ActiveCMIS is Ruby library aimed at easing the interaction with various CMIS pro
 - Support for paging
 
 ## Installation ##
-If you haven't installed Nokogiri yet you'll need to install Nokogiri first.
+If you haven't installed Nokogiri yet it will be installed automatically, you will need a C compiler and the development files for libxml2.
+
+If you don't have Yardoc or bluecloth installed you won't be able to build the documentation and will need to add `--no-rdoc --no-ri` to the next command (or install yard and bluecloth first).
 
     > gem install active_cmis
 ## Usage ##
