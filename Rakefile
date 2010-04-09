@@ -1,36 +1,36 @@
 require 'rubygems'
 require 'rake/gempackagetask'
-require 'yard'
 
-YARD::Rake::YardocTask.new do |t|
-  t.files   = ['lib/**/*.rb']   # optional
-  t.options = ["--default-return", "::Object", "--query", "!@private", "--hide-void-return"]
+begin
+  require 'yard'
+
+  YARD::Rake::YardocTask.new do |t|
+    t.files   = ['lib/**/*.rb', '-', 'TODO']   # optional
+    t.options = ["--default-return", "::Object", "--query", "!@private", "--hide-void-return"]
+  end
+rescue LoadError
+  puts "Yard, or a dependency, not available. Install it with gem install jeweler"
 end
 
-PACKAGE_VERSION = File.readlines("VERSION")[0][/[\d.]*/]
+begin
+  require 'jeweler'
+  Jeweler::Tasks.new do |gemspec|
+    gemspec.name = "active_cmis"
+    gemspec.summary = "A library to interact with CMIS repositories through the AtomPub/REST binding"
+    gemspec.description = "A CMIS library implementing both reading and updating capabilities through the AtomPub/REST binding to CMIS."
+    gemspec.email = "joeri@xaop.com"
+    gemspec.homepage = "http://xaop.com/labs/activecmis/"
+    gemspec.authors = ["Joeri Samson"]
 
-desc "Build the gem"
-spec = Gem::Specification.new do |s|
-  s.name = "active_cmis"
-  s.version = PACKAGE_VERSION
-  s.author = "Joeri Samson"
-  s.email = "joeri@xaop.com"
+    gemspec.add_runtime_dependency 'nokogiri', '>= 1.4.1'
 
-  s.summary = "Interface to CMIS implementations comparable to ActiveRecord"
-  s.description = "An interface to CMIS, using the AtomPub Rest interface"
+    gemspec.has_rdoc = 'yard'
+    gemspec.extra_rdoc_files = ['TODO']
+    gemspec.rdoc_options << "--default-return" << "::Object" << "--query" << "!@private" << "--hide-void-return"
 
-  s.files += %w(VERSION Rakefile)
-  s.files += Dir['lib/**/*.rb']
-
-  s.add_runtime_dependency 'nokogiri', '>= 1.4.1'
-
-  s.rdoc_options << "--accessor" << "cache=cached"
-
-  s.required_ruby_version = '>= 1.8.6'
-  s.platform = Gem::Platform::RUBY
-end
-
-Rake::GemPackageTask.new(spec) do |pkg|
-  pkg.need_zip = true
-  pkg.need_tar = true
+    gemspec.required_ruby_version = '>= 1.8.6'
+  end
+  Jeweler::GemcutterTasks.new
+rescue LoadError
+  puts "Jeweler (or a dependency) not available. Install it with: gem install jeweler"
 end
