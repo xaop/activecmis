@@ -1,7 +1,8 @@
 # ActiveCMIS Release 0.1.0 #
-**Homepage**:  <http://xaop.com/labs/activecmis>   
-**Git**:       <http://github.com/xaop/activecmis>   
-**Author**:    XAOP bvba   
+**Homepage**:  <http://xaop.com/labs/activecmis>  
+**Git**:       <http://github.com/xaop/activecmis>  
+**Documentation**: <http://yardoc.org/docs/xaop-activecmis>   
+**Author**:    XAOP bvba  
 **Copyright**: 2010
 **License**:   MIT License
 ## Synopsis ##
@@ -23,6 +24,6 @@ If you haven't installed Nokogiri yet it will be installed automatically, you wi
 
 And so on ...
 
-Full documentation of the API can be found at <http://xaop.com/labs/activecmis/doc/index.html>
+Full documentation of the API can be found at [yardoc](http://yardoc.org/docs/xaop-activecmis/file:README.md)
 
 A tutorial can be found at [the xaop site](http://xaop.com/labs/activecmis "tutorial")
