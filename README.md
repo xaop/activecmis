@@ -1,7 +1,7 @@
 # ActiveCMIS Release 0.1.0 #
 **Homepage**:  <http://xaop.com/labs/activecmis>  
 **Git**:       <http://github.com/xaop/activecmis>  
-**Documentation**: <http://yardoc.org/docs/xaop-activecmis>   
+**Documentation**: <http://rdoc.info/projects/xaop/activecmis>   
 **Author**:    XAOP bvba  
 **Copyright**: 2010
 **License**:   MIT License
