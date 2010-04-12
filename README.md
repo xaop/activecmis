@@ -24,6 +24,6 @@ If you haven't installed Nokogiri yet it will be installed automatically, you wi
 
 And so on ...
 
-Full documentation of the API can be found at [yardoc](http://yardoc.org/docs/xaop-activecmis/file:README.md)
+Full documentation of the API can be found at [rdoc.info](http://rdoc.info/projects/xaop/activecmis)
 
 A tutorial can be found at [the xaop site](http://xaop.com/labs/activecmis "tutorial")
