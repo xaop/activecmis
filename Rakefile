@@ -23,6 +23,8 @@ begin
     gemspec.authors = ["Joeri Samson"]
 
     gemspec.add_runtime_dependency 'nokogiri', '>= 1.4.1'
+    gemspec.add_runtime_dependency 'yard', '>= 0.5.0'
+    gemspec.add_runtime_dependency 'bluecloth'
 
     gemspec.has_rdoc = 'yard'
     gemspec.extra_rdoc_files = ['TODO']
