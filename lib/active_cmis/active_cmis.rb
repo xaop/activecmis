@@ -1,8 +1,8 @@
 module ActiveCMIS
-  # Default logger: Outputs to STDOUT and has level set to DEBUG
+  # Default logger: no output
   # @return [Logger]
   def self.default_logger
-    @default_logger ||= Logger.new(STDOUT)
+    @default_logger ||= Logger.new(nil)
   end
 
   # Will search for a given configuration in a file, and return the equivalent Repository
@@ -41,7 +41,11 @@ module ActiveCMIS
       config = config[config_name]
       if config.is_a? Hash
         if config.has_key? "log_file"
-          logger = Logger.new(config["trace_file"])
+          trace_file = config["trace_file"]
+          if trace_file == "-"
+            trace_file = STDOUT
+          end
+          logger = Logger.new(trace_file)
         else
           logger = default_logger
         end
