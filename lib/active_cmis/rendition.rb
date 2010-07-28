@@ -46,12 +46,12 @@ module ActiveCMIS
         response = repository.conn.get_response(@url)
         status = response.code.to_i
         if 200 <= status && status < 300
-          data = response.body 
+          data = response.body
         else
           raise HTTPError.new("Problem downloading rendition: status: #{status}, message: #{response.body}")
         end
         content_type = response.content_type
-        content_lenth = response.content_length || response.body.length # In case content encoding is chunked? ??
+        content_length = response.content_length || response.body.length # In case content encoding is chunked? ??
       else
         data = @data
         content_type = @format
