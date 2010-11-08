@@ -2,13 +2,13 @@ module ActiveCMIS
   class Relationship < ::ActiveCMIS::Object
     # @return [Object]
     def source
-      Internal::Utils.string_or_id_to_object(attribute("cmis:sourceId"))
+      Internal::Utils.string_or_id_to_object(repository, attribute("cmis:sourceId"))
     end
     cache :source
 
     # @return [Object]
     def target
-      Internal::Utils.string_or_id_to_object(attribute("cmis:targetId"))
+      Internal::Utils.string_or_id_to_object(repository, attribute("cmis:targetId"))
     end
     cache :target
 

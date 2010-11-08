@@ -38,7 +38,11 @@ module ActiveCMIS
 
       # Returns id if id is already an object, object_by_id if id is a string, nil otherwise
       # @private
-      def self.string_or_id_to_object(id)
+      def self.string_or_id_to_object(repository, id)
+        # FIXME: only used in lib/activecmis/relationship.rb, the repository parameter
+        # would be unnecessary if included.
+        # Should this be a generic method, or should this be moved to the Relationship class?
+        # Or should I start including this module in every place that needs it?
         case id
         when String; repository.object_by_id(id)
         when ::ActiveCMIS::Object; id
