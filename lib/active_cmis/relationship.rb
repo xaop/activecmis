@@ -25,10 +25,12 @@ module ActiveCMIS
       super
       # Potentially necessary if repositories support it
       # Probably not though
-      if source = updates["cmis:sourceId"]
+
+      # Note: we use remove_instance_variable because of the way I implemented the caching
+      if updates["cmis:sourceId"] && instance_variable_defined?("@source")
         remove_instance_variable "@source"
       end
-      if updates["cmis:targetId"]
+      if updates["cmis:targetId"] && instance_variable_defined?("@target")
         remove_instance_variable "@target"
       end
     end
