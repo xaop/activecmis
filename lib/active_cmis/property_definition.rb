@@ -53,7 +53,7 @@ module ActiveCMIS
 
       if required && updatability == "readonly"
         logger.warn "The server behaved strange: attribute #{self.inspect} required but readonly, will set required to false"
-        required = false
+        @required = false
       end
 
       @property_type = case property_type.downcase
