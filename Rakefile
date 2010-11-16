@@ -25,6 +25,8 @@ begin
     gemspec.add_runtime_dependency 'nokogiri', '>= 1.4.1'
 
     gemspec.required_ruby_version = '>= 1.8.6'
+
+    gemspec.exclude '.gitignore'
   end
   Jeweler::GemcutterTasks.new
 rescue LoadError
