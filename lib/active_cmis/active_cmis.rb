@@ -5,8 +5,6 @@ module ActiveCMIS
     @default_logger ||= Logger.new(nil)
   end
 
-  # Will search for a given configuration in a file, and return the equivalent Repository
-  #
   # server_url and repository_id are required options
   #
   # server_login, server_password and server_auth can be used to authenticate against the server,
@@ -19,6 +17,47 @@ module ActiveCMIS
   # by naming a Logger::Severity constant or the equivalent integer
   #
   # The destination of the logger output can be set with log_file (defaults to STDOUT), (should not contain ~)
+  #
+  # Default locations for the config file are: ./cmis.yml and .cmis.yml in that order
+  # @return [Repository]
+  def self.connect(config)
+    if config.is_a? Hash
+      if config.has_key? "log_file"
+        trace_file = config["trace_file"]
+        if trace_file == "-"
+          trace_file = STDOUT
+        end
+        logger = Logger.new(trace_file)
+      else
+        logger = default_logger
+      end
+      if config.has_key? "log_level"
+        logger.level = Logger.const_get(config["trace_level"].upcase) rescue config["trace_level"].to_i
+      else
+        logger.level = Logger::WARN
+      end
+
+      server = Server.new(config["server_url"], logger)
+      if user_name = config["server_login"] and password = config["server_password"]
+        auth_type = config["server_auth"] || :basic
+        server.authenticate(auth_type, user_name, password)
+      end
+      repository = server.repository(config["repository_id"])
+      if user_name = config["repository_login"] and password = config["repository_password"]
+        auth_type = config["repository_auth"] || :basic
+        repository.authenticate(auth_type, user_name, password)
+      end
+      return repository
+    elsif config.nil?
+      raise "Configuration not found in file"
+    else
+      raise "Configuration does not have correct format (not a hash)"
+    end
+  end
+
+  # Will search for a given configuration in a file, and return the equivalent Repository
+  #
+  # The options that can be used are the same as for the connect method
   #
   # Default locations for the config file are: ./cmis.yml and .cmis.yml in that order
   # @return [Repository]
@@ -39,38 +78,7 @@ module ActiveCMIS
     config = YAML.load_file(file)
     if config.is_a? Hash
       config = config[config_name]
-      if config.is_a? Hash
-        if config.has_key? "log_file"
-          trace_file = config["trace_file"]
-          if trace_file == "-"
-            trace_file = STDOUT
-          end
-          logger = Logger.new(trace_file)
-        else
-          logger = default_logger
-        end
-        if config.has_key? "log_level"
-          logger.level = Logger.const_get(config["trace_level"].upcase) rescue config["trace_level"].to_i
-        else
-          logger.level = Logger::WARN
-        end
-
-        server = Server.new(config["server_url"], logger)
-        if user_name = config["server_login"] and password = config["server_password"]
-          auth_type = config["server_auth"] || :basic
-          server.authenticate(auth_type, user_name, password)
-        end
-        repository = server.repository(config["repository_id"])
-        if user_name = config["repository_login"] and password = config["repository_password"]
-          auth_type = config["repository_auth"] || :basic
-          repository.authenticate(auth_type, user_name, password)
-        end
-        return repository
-      elsif config.nil?
-        raise "Configuration not found in file"
-      else
-        raise "Configuration does not have right format (not a hash)"
-      end
+      connect(config[config_name])
     else
       raise "Configuration file does not have right format (not a hash)"
     end
