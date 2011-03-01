@@ -36,12 +36,25 @@ module ActiveCMIS
       @rel.nil?
     end
 
-    # Returns a hash with the name of the file to which was written, the lenthe, and the content type
+    # Returns a hash with the name of the file to which was written, the length, and the content type
     #
     # *WARNING*: this loads the complete file in memory and dumps it at once, this should be fixed
     # @param [String] filename Location to store the content.
     # @return [Hash]
     def get_file(file_name)
+      response = get_data
+      File.open(file_name, "w") {|f| f.syswrite response.delete(:data) }
+      response.merge!(:file_name => file_name)
+    end
+
+    # Returns a hash with the data of te rendition, the length and the content type
+    #
+    # *WARNING*: this loads all the data in memory
+    # Possible future enhancement could be to allow a block to which data is passed in chunks?r
+    # Not sure that is possible with Net::HTTP though.
+    # @param [String] filename Location to store the content.
+    # @return [Hash]
+    def get_data
       if @url
         response = repository.conn.get_response(@url)
         status = response.code.to_i
@@ -57,9 +70,8 @@ module ActiveCMIS
         content_type = @format
         content_length = @data.length
       end
-      File.open(file_name, "w") {|f| f.syswrite data }
 
-      {:file => file_name, :content_type => content_type, :content_length => content_length}
+      {:data => data, :content_type => content_type, :content_length => content_length}
     end
   end
 end
