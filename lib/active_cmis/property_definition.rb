@@ -51,9 +51,13 @@ module ActiveCMIS
         end
       end
 
-      if required && updatability == "readonly"
+      if required and updatability == "readonly"
         logger.warn "The server behaved strange: attribute #{self.inspect} required but readonly, will set required to false"
         @required = false
+      end
+      if id == "cmis:objectTypeId" and updatability != "oncreate"
+        logger.warn "The server behaved strange: cmis:objectTypeId should be updatable on create but #{updatability}"
+        @updatability = "oncreate"
       end
 
       @property_type = case property_type.downcase
