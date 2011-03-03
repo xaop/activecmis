@@ -29,7 +29,7 @@ module ActiveCMIS
       if f = parent_folders.first
         f.items.url
       else
-        raise "Not possible"
+        raise "Not possible to create folder without parent folder"
       end
     end
   end
