@@ -207,34 +207,19 @@ module ActiveCMIS
     private
     attr_reader :updated_contents
 
-    # Optional parameters:
-    #   - properties: a hash key/definition pairs of properties to be rendered (defaults to all attributes)
-    #   - attributes: a hash key/value pairs used to determine the values rendered (defaults to self.attributes)
     def render_atom_entry(properties = self.class.attributes, attributes = self.attributes, options = {})
-      builder = Nokogiri::XML::Builder.new do |xml|
-        xml.entry(NS::COMBINED) do
-          xml.parent.namespace = xml.parent.namespace_definitions.detect {|ns| ns.prefix == "at"}
-          xml["at"].author do
-            xml["at"].name conn.user # FIXME: find reliable way to set author?
-          end
-          if updated_contents && (options[:create] || options[:checkin])
-            xml["cra"].content do
-              xml["cra"].mediatype(updated_contents[:mime_type] || "application/binary")
-              data = updated_contents[:data] || File.read(updated_contents[:file])
-              xml["cra"].base64 [data].pack("m")
-            end
-          end
-          xml["cra"].object do
-            xml["c"].properties do
-              properties.each do |key, definition|
-                definition.render_property(xml, attributes[key])
-              end
-            end
+      super(properties, attributes, options) do |entry|
+        if updated_contents && (options[:create] || options[:checkin])
+          entry["cra"].content do
+            entry["cra"].mediatype(updated_contents[:mime_type] || "application/binary")
+            data = updated_contents[:data] || File.read(updated_contents[:file])
+            entry["cra"].base64 [data].pack("m")
           end
         end
+        if block_given?
+          yield(entry)
+        end
       end
-      conn.logger.debug builder.to_xml
-      builder.to_xml
     end
 
 

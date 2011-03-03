@@ -186,6 +186,7 @@ module ActiveCMIS
             @attributes[attr.id] = attr
           end
         end
+        # FIXME: folders are not fileable on Alfresco?
         @attributes.freeze
       end
     end

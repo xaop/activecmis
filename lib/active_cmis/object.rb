@@ -332,12 +332,20 @@ module ActiveCMIS
     # @param properties a hash key/definition pairs of properties to be rendered (defaults to all attributes)
     # @param attributes a hash key/value pairs used to determine the values rendered (defaults to self.attributes)
     # @param options
+    # @yield [entry] Optional block to customize the rendered atom entry
+    # @yieldparam [Nokogiri::XML::Builder] entry The entry XML builder element on which you can add additional tags (uses the NS::COMBINED namespaces)
     def render_atom_entry(properties = self.class.attributes, attributes = self.attributes, options = {})
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.entry(NS::COMBINED) do
           xml.parent.namespace = xml.parent.namespace_definitions.detect {|ns| ns.prefix == "at"}
           xml["at"].author do
             xml["at"].name conn.user # FIXME: find reliable way to set author?
+          end
+          xml["at"].title attributes["cmis:name"]
+          if attributes["cmis:objectId"]
+            xml["at"].id attributes["cmis:objectId"]
+          else
+            xml["at"].id "random-garbage"
           end
           xml["cra"].object do
             xml["c"].properties do
@@ -346,8 +354,10 @@ module ActiveCMIS
               end
             end
           end
+          yield(xml) if block_given?
         end
       end
+      conn.logger.debug builder.to_xml
       builder.to_xml
     end
 
