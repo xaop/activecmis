@@ -391,7 +391,8 @@ module ActiveCMIS
       end
 
       properties = self.class.attributes.reject do |key, definition|
-        !updated_attributes.include?(key) && !definition.required
+        # !updated_attributes.include?(key) && !definition.required
+        attributes[key].nil? or definition.updatability == "readonly"
       end
       body = render_atom_entry(properties, attributes, :create => true)
 
