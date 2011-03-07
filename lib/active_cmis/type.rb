@@ -186,7 +186,13 @@ module ActiveCMIS
             @attributes[attr.id] = attr
           end
         end
-        # FIXME: folders are not fileable on Alfresco?
+        if %w(cmis:folder cmis:document).include? @baseId and not @fileable
+          logger.warn "The server behaved strange: #{@id}, with basetype #{@baseId} MUST be fileable"
+          @fileable = true
+        elsif @baseId == "cmis:relationship" and @fileable
+          logger.warn "The server behaved strange: #{@id}, with basetype #{@baseId} MUST NOT be fileable"
+          @fileable = false
+        end
         @attributes.freeze
       end
     end
