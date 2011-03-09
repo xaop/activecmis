@@ -57,7 +57,7 @@ module ActiveCMIS
       # @private
       # @return [Nokogiri::XML::Document]
       def get_xml(url)
-        Nokogiri::XML.parse(get(url))
+        Nokogiri::XML.parse(get(url), nil, nil, Nokogiri::XML::ParseOptions::STRICT)
       end
 
       # @private
