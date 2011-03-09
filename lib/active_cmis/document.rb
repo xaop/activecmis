@@ -155,7 +155,7 @@ module ActiveCMIS
 
       response = conn.post_response(repository.checkedout.url, body)
       if 200 <= response.code.to_i && response.code.to_i < 300
-        entry = Nokogiri::XML.parse(response.body).xpath("/at:entry", NS::COMBINED)
+        entry = Nokogiri::XML.parse(response.body, nil, nil, Nokogiri::XML::ParseOptions::STRICT).xpath("/at:entry", NS::COMBINED)
         result = self_or_new(entry)
         if result.working_copy? # Work around a bug in OpenCMIS where result returned is the version checked out not the PWC
           result
