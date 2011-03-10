@@ -288,6 +288,15 @@ module ActiveCMIS
       end
     end
 
+    # Tries to delete the object
+    # To delete all versions of a Document try #all_versions.delete
+    #
+    # For policies this may just remove the policy from the policy group
+    # of a document, this depends on how you retrieved the policy. Be careful
+    def destroy
+      conn.delete(self_link)
+    end
+
     private
     # Internal value, not meant for common-day use
     # @private

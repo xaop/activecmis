@@ -130,12 +130,43 @@ module ActiveCMIS
       to_a.reverse
     end
 
-    # @return [void]
+    ## @return [void]
     def reload
       @pages = []
       @elements = []
       @next = @url
       __reload
+    end
+
+    # Attempts to delete the collection.
+    # This may not work on every collection, ActiveCMIS does not (yet) try to check this client side.
+    # 
+    # For folder collections 2 options are available, again no client side checking
+    # is done to see whether the collection can handle these options
+    #
+    # @param [Hash] options
+    # @option options [String] :unfileObjects Parameter valid for items collection of folder
+    #   "delete" (default): Delete all fileable objects
+    #   "unfile": unfile all fileable objects
+    #   "deleteSingleFiled": Delete all fileable objects, whose only parent folder is the current folder. Unfile all other objects from this folder
+    # @option options [Bool] :continueOnFailure default = false, if false abort on failure of single document/folder, else try to continue with deleting child folders/documents
+    def destroy(options = {})
+      if options.empty?
+        conn.delete(@url)
+      else
+        unfileObjects = options.delete(:unfileObjects)
+        continueOnFailure = options.delete(:continueOnFailure)
+        raise ArgumentError("Unknown parameters #{options.keys.join(', ')}") unless options.empty?
+
+
+        # XXX: have less cumbersome code, more generic and more efficient code
+        new_url = @url
+        new_url = Internal::Utils.append_parameters(new_url, :unfileObjects => unfileObjects) unless unfileObjects.nil?
+        new_url = Internal::Utils.append_parameters(new_url, :continueOnFailure => continueOnFailure) unless continueOnFailure.nil?
+
+        # TODO: check that we can handle 200,202,204 responses correctly
+        conn.delete(@url)
+      end
     end
 
     private

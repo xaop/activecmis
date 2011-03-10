@@ -78,6 +78,15 @@ module ActiveCMIS
       end
 
       # @private
+      def delete(url, headers = {})
+        uri = normalize_url(url)
+
+        req = Net::HTTP::Put.new(uri.request_uri)
+        headers.each {|k,v| req.add_field k, v}
+        handle_request(uri, req)
+      end
+
+      # @private
       def post(url, body, headers = {})
         uri = normalize_url(url)
 
