@@ -143,7 +143,7 @@ module ActiveCMIS
 
     private
     def self_link(options = {})
-      Internal::Utils.add_parameters(@self_link, options)
+      Internal::Utils.append_parameters(@self_link, options)
     end
 
     def conn
