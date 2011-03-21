@@ -48,8 +48,6 @@ module ActiveCMIS
         repository.authenticate(auth_type, user_name, password)
       end
       return repository
-    elsif config.nil?
-      raise "Configuration not found in file"
     else
       raise "Configuration does not have correct format (not a hash)"
     end
@@ -77,8 +75,11 @@ module ActiveCMIS
 
     config = YAML.load_file(file)
     if config.is_a? Hash
-      config = config[config_name]
-      connect(config[config_name])
+      if config = config[config_name]
+        connect(config)
+      else 
+        raise "Configuration not found in file"
+      end
     else
       raise "Configuration file does not have right format (not a hash)"
     end
