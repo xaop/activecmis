@@ -9,7 +9,7 @@ begin
     t.options = ["--default-return", "::Object", "--query", "!@private", "--hide-void-return"]
   end
 rescue LoadError
-  puts "Yard, or a dependency, not available. Install it with gem install jeweler"
+  puts "Yard, or a dependency, not available. Install it with gem install yard"
 end
 
 begin
