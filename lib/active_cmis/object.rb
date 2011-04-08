@@ -352,9 +352,9 @@ module ActiveCMIS
           end
           xml["at"].title attributes["cmis:name"]
           if attributes["cmis:objectId"]
-            xml["at"].id attributes["cmis:objectId"]
+            xml["at"].id_ attributes["cmis:objectId"]
           else
-            xml["at"].id "random-garbage"
+            xml["at"].id_ "random-garbage"
           end
           xml["cra"].object do
             xml["c"].properties do
