@@ -1,8 +1,8 @@
-class ActiveCMIS
+module ActiveCMIS
   module Version
     MAJOR = 0
     MINOR = 1
-    PATCH = 11
+    PATCH = 12
     STRING = "#{MAJOR}.#{MINOR}.#{PATCH}"
   end
 end
