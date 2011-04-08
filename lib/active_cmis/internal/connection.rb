@@ -127,9 +127,21 @@ module ActiveCMIS
         else URI.parse(url.to_s)
         end
       end
-
+      
+	  def http_class
+	    @http_class ||= begin
+		  if proxy = ENV['http_proxy'] then
+		    p_uri = URI.parse(proxy)
+			p_user, p_pass = p_uri.userinfo.split(/:/) if p_uri.userinfo
+			Net::HTTP::Proxy(p_uri.host, p_uri.port, p_user, p_pass)
+		  else
+		    Net::HTTP
+		  end
+		end
+	  end
+	  
       def authenticate_request(uri, req)
-        http = Net::HTTP.new(uri.host, uri.port)
+        http = http_class.new(uri.host, uri.port)
         if uri.scheme == 'https'
           http.use_ssl = true
         end
