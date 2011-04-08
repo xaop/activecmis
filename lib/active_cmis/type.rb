@@ -186,11 +186,11 @@ module ActiveCMIS
             @attributes[attr.id] = attr
           end
         end
-        if %w(cmis:folder cmis:document).include? @baseId and not @fileable
-          logger.warn "The server behaved strange: #{@id}, with basetype #{@baseId} MUST be fileable"
+        if %w(cmis:folder cmis:document).include? @base_id and not @fileable
+          repository.logger.warn "The server behaved strange: #{@id}, with basetype #{@base_id} MUST be fileable"
           @fileable = true
-        elsif @baseId == "cmis:relationship" and @fileable
-          logger.warn "The server behaved strange: #{@id}, with basetype #{@baseId} MUST NOT be fileable"
+        elsif @base_id == "cmis:relationship" and @fileable
+          repository.logger.warn "The server behaved strange: #{@id}, with basetype #{@base_id} MUST NOT be fileable"
           @fileable = false
         end
         @attributes.freeze
