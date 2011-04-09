@@ -23,7 +23,7 @@ module ActiveCMIS
   def self.connect(config)
     if config.is_a? Hash
       if config.has_key? "log_file"
-        trace_file = config["trace_file"]
+        trace_file = config["log_file"]
         if trace_file == "-"
           trace_file = STDOUT
         end
@@ -32,7 +32,7 @@ module ActiveCMIS
         logger = default_logger
       end
       if config.has_key? "log_level"
-        logger.level = Logger.const_get(config["trace_level"].upcase) rescue config["trace_level"].to_i
+        logger.level = (Logger.const_get(config["log_level"].upcase) rescue config["log_level"].to_i)
       else
         logger.level = Logger::WARN
       end
