@@ -22,7 +22,7 @@ module ActiveCMIS
 
     class String < CommonBase
       attr_reader :max_length
-      def initialize(max_length)
+      def initialize(max_length = nil)
         @max_length = max_length
       end
 
@@ -47,10 +47,10 @@ module ActiveCMIS
       private :_cmis2rb, :_rb2cmis
     end
 
-    # Precision is ignored?
+    # Qarning: Precision is ignored?
     class Decimal < CommonBase
       attr_reader :precision, :min_value, :max_value
-      def initialize(precision, min_value, max_value)
+      def initialize(precision = nil, min_value = nil, max_value = nil)
         @precision, @min_value, @max_value = precision, min_value, max_value
       end
 
@@ -77,7 +77,7 @@ module ActiveCMIS
 
     class Integer < CommonBase
       attr_reader :min_value, :max_value
-      def initialize(min_value, max_value)
+      def initialize(min_value = nil, max_value = nil)
         @min_value, @max_value = min_value, max_value
       end
 
@@ -106,7 +106,7 @@ module ActiveCMIS
       attr_reader :resolution
 
       @instances ||= {}
-      def self.new(precision)
+      def self.new(precision = TIME)
         raise ArgumentError.new("Got precision = #{precision.inspect}") unless [YEAR, DATE, TIME].include? precision.to_s.downcase
         @instances[precision] ||= super
       end
@@ -228,5 +228,18 @@ module ActiveCMIS
 
       private :_cmis2rb, :_rb2cmis
     end
+
+    # Map of XML property elements to the corresponding AtomicTypes
+    MAPPING = {
+      "propertyString" => ActiveCMIS::AtomicType::String,
+      "propertyBoolean" => ActiveCMIS::AtomicType::Boolean,
+      "propertyId" => ActiveCMIS::AtomicType::ID,
+      "propertyDateTime" => ActiveCMIS::AtomicType::DateTime,
+      "propertyInteger" => ActiveCMIS::AtomicType::Integer,
+      "propertyDecimal" => ActiveCMIS::AtomicType::Decimal,
+      "propertyHtml" => ActiveCMIS::AtomicType::HTML,
+      "propertyUri" => ActiveCMIS::AtomicType::URI,
+    }
+
   end
 end

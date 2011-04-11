@@ -145,7 +145,7 @@ module ActiveCMIS
     # @option options [String] :renditionFilter ('cmis:none') Possible values: 'cmis:none', '*' (all), comma-separated list of rendition kinds or mimetypes
     # @option options [Integer] :maxItems used for paging
     # @option options [Integer] :skipCount (0) used for paging
-    # @return [Collection]
+    # @return [Collection] A collection with each return value wrapped in a QueryResult
     def query(query_string, options = {})
       raise "This repository does not support queries" if capabilities["Query"] == "none"
       # For the moment we make no difference between metadataonly,fulltextonly,bothseparate and bothcombined
@@ -162,7 +162,9 @@ module ActiveCMIS
       # FIXME: options are not respected yet by pick_template
       url = pick_template("query", :mimetype => "application/atom+xml", :type => "feed")
       url = fill_in_template(url, options.merge("q" => query_string))
-      Collection.new(self, url)
+      Collection.new(self, url) do |entry|
+        QueryResult.new(entry)
+      end
     end
 
     # The root folder of the repository (as defined in the CMIS standard)
