@@ -49,7 +49,7 @@ module ActiveCMIS
       end
       return repository
     else
-      raise "Configuration does not have correct format (not a hash)"
+      raise "Configuration does not have correct format (#{config.class} is not a hash)"
     end
   end
 
@@ -81,7 +81,7 @@ module ActiveCMIS
         raise "Configuration not found in file"
       end
     else
-      raise "Configuration file does not have right format (not a hash)"
+      raise "Configuration file #{file} does not have right format (not a hash)"
     end
   end
 end
