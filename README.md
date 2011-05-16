@@ -1,9 +1,9 @@
-# ActiveCMIS Release 0.1.0 #
+# ActiveCMIS Release 0.2.0 #
 **Homepage**:  <http://xaop.com/labs/activecmis>  
 **Git**:       <http://github.com/xaop/activecmis>  
-**Documentation**: <http://rdoc.info/projects/xaop/activecmis>   
+**Documentation**: <http://rdoc.info/github/xaop/activecmis/master/frames>
 **Author**:    XAOP bvba  
-**Copyright**: 2010
+**Copyright**: 2011
 **License**:   MIT License
 ## Synopsis ##
 ActiveCMIS is Ruby library aimed at easing the interaction with various CMIS providers. It creates Ruby objects for CMIS objects, and creates Ruby classes that correspond to CMIS types.
