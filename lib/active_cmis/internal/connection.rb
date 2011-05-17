@@ -178,6 +178,7 @@ module ActiveCMIS
           case status
           when 400; raise Error::InvalidArgument.new(response.body)
             # FIXME: can also be filterNotValid
+          when 401; raise HTTPError::AuthenticationError.new(response.body)
           when 404; raise Error::ObjectNotFound.new(response.body)
           when 403; raise Error::PermissionDenied.new(response.body)
             # FIXME: can also be streamNotSupported (?? shouldn't that be 405??)
