@@ -8,10 +8,13 @@ module ActiveCMIS
     attr_reader :rendition_kind
     # @return [String,nil] The format is equal to the mime type, but may be unset or misleading
     attr_reader :format
+    # @return [ActiveCMIS::Document] The document to which the rendition belongs
+    attr_reader :document
 
     # @private
-    def initialize(repository, link)
+    def initialize(repository, document, link)
       @repository = repository
+      @document = document
 
       @rel = link['rel'] == "alternate"
       @rendition_kind = link['renditionKind'] if rendition?

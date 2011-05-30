@@ -5,14 +5,14 @@ module ActiveCMIS
     def content_stream
       if content = data.xpath("at:content", NS::COMBINED).first
         if content['src']
-          ActiveCMIS::Rendition.new(repository, "href" => content['src'], "type" => content["type"])
+          ActiveCMIS::Rendition.new(repository, self, "href" => content['src'], "type" => content["type"])
         else
           if content['type'] =~ /\+xml$/
             content_data = content.to_xml # FIXME: this may not preserve whitespace
           else
             content_data = data.unpack("m*").first
           end
-          ActiveCMIS::Rendition.new(repository, "data" => content_data, "type" => content["type"])
+          ActiveCMIS::Rendition.new(repository, self, "data" => content_data, "type" => content["type"])
         end
       elsif content = data.xpath("cra:content", NS::COMBINED).first
         content.children.each do |node|
@@ -21,7 +21,7 @@ module ActiveCMIS
           content_type = node.text if node.name == "mediaType"
         end
         data = content_data.unpack("m*").first
-        ActiveCMIS::Rendition.new(repository, "data" => content_data, "type" => content_type)
+        ActiveCMIS::Rendition.new(repository, self, "data" => content_data, "type" => content_type)
       end
     end
     cache :content_stream
@@ -36,7 +36,7 @@ module ActiveCMIS
 
       links = data.xpath("at:link[@rel = 'alternate']", NS::COMBINED)
       links.map do |link|
-        ActiveCMIS::Rendition.new(repository, link)
+        ActiveCMIS::Rendition.new(repository, self, link)
       end
     end
     cache :renditions
