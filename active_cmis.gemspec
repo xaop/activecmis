@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Joeri Samson"]
-  s.date = %q{2011-05-30}
+  s.date = %q{2011-05-31}
   s.description = %q{A CMIS library implementing both reading and updating capabilities through the AtomPub/REST binding to CMIS.}
   s.email = %q{joeri@xaop.com}
   s.extra_rdoc_files = [
