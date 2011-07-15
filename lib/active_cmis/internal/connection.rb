@@ -1,3 +1,4 @@
+
 module ActiveCMIS
   module Internal
     class Connection
@@ -18,10 +19,15 @@ module ActiveCMIS
       # @return [void]
       # @example Basic authentication
       #   repo.authenticate(:basic, "username", "password")
+      # @example NTLM authentication
+      #   repo.authenticate(:ntlm, "username", "password")
       def authenticate(method, *params)
         case method
-        when :basic
+        when :basic, "basic"
           @authentication = {:method => :basic_auth, :params => params}
+          @user = params.first
+        when :ntlm, "ntlm"
+          @authentication = {:method => :ntlm_auth, :params => params}
           @user = params.first
         else raise "Authentication method not supported"
         end
