@@ -173,24 +173,30 @@ module ActiveCMIS
       def handle_request(uri, req)
         logger.debug "#{req.method} #{uri}"
         http = authenticate_request(uri, req)
-        response = http.request(req)
-        status = response.code.to_i
-        logger.debug "RECEIVED #{response.code}"
+
+        status, body = nil
+        http.request(req) { |resp|
+          status = resp.code.to_i
+          body = resp.body
+        }
+
+        logger.debug "RECEIVED #{status}"
+
         if 200 <= status && status < 300
-          return response.body
+          return body
         else
           # Problem: some codes 400, 405, 403, 409, 500 have multiple meanings
-          logger.error "Error occurred when handling request:\n#{response.body}"
+          logger.error "Error occurred when handling request:\n#{body}"
           case status
-          when 400; raise Error::InvalidArgument.new(response.body)
+          when 400; raise Error::InvalidArgument.new(body)
             # FIXME: can also be filterNotValid
-          when 401; raise HTTPError::AuthenticationError.new(response.body)
-          when 404; raise Error::ObjectNotFound.new(response.body)
-          when 403; raise Error::PermissionDenied.new(response.body)
+          when 401; raise HTTPError::AuthenticationError.new(body)
+          when 404; raise Error::ObjectNotFound.new(body)
+          when 403; raise Error::PermissionDenied.new(body)
             # FIXME: can also be streamNotSupported (?? shouldn't that be 405??)
-          when 405; raise Error::NotSupported.new(response.body)
+          when 405; raise Error::NotSupported.new(body)
           else
-            raise HTTPError.new("A HTTP #{status} error occured, for more precision update the code:\n" + response.body)
+            raise HTTPError.new("A HTTP #{status} error occured, for more precision update the code:\n" + body)
           end
         end
       end
