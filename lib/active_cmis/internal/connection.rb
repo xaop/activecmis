@@ -174,17 +174,33 @@ module ActiveCMIS
         logger.debug "#{req.method} #{uri}"
         http = authenticate_request(uri, req)
 
-        status, body = nil
+        status, body, headers = nil
         http.request(req) { |resp|
           status = resp.code.to_i
           body = resp.body
+          headers = resp.header
         }
 
         logger.debug "RECEIVED #{status}"
 
         if 200 <= status && status < 300
           return body
-        else
+        elsif 300 <= status && status < 400
+          # follow the redirected a limited number of times
+          retry_count = (retry_count || 0) + 1
+          location = headers["location"]
+          logger.debug "REDIRECTING: #{location.inspect}"
+          if retry_count <= 3
+            new_uri = URI.parse(location)
+            if new_uri.relative?
+              uri = uri + location
+            end
+            req = req.class.new(uri.request_uri)
+            retry
+          else
+            raise HTTPError.new("Too many redirects")
+          end
+        elsif 400 <= status && status < 500
           # Problem: some codes 400, 405, 403, 409, 500 have multiple meanings
           logger.error "Error occurred when handling request:\n#{body}"
           case status
@@ -196,8 +212,10 @@ module ActiveCMIS
             # FIXME: can also be streamNotSupported (?? shouldn't that be 405??)
           when 405; raise Error::NotSupported.new(body)
           else
-            raise HTTPError.new("A HTTP #{status} error occured, for more precision update the code:\n" + body)
+            raise HTTPError::ClientError.new("A HTTP #{status} error occured, for more precision update the code:\n" + body)
           end
+        elsif 400 <= status && status < 500
+          raise HTTPError::ServerError.new("The server encountered an internal error #{status} (this could be a client error though):\n" + body)
         end
       end
     end
