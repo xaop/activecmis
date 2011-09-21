@@ -1,5 +1,4 @@
 require 'rubygems'
-require 'rake/gempackagetask'
 
 begin
   require 'yard'
