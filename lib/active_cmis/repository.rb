@@ -40,6 +40,53 @@ module ActiveCMIS
       @cmis_version ||= data.xpath("cra:repositoryInfo/c:cmisVersionSupported", NS::COMBINED).text
     end
 
+    # The name of the repository, meant for display purposes
+    # @return [String]
+    def name
+      @name ||= data.xpath("cra:repositoryInfo/c:repositoryName", NS::COMBINED).text
+    end
+
+    # A description of the repository
+    # @return [String]
+    def description
+      @name ||= data.xpath("cra:repositoryInfo/c:repositoryDescription", NS::COMBINED).text
+    end
+
+    # The name of the vendor of this Repository
+    # @return [String]
+    def vendor
+      @vendor ||= data.xpath("cra:repositoryInfo/c:vendorName", NS::COMBINED).text
+    end
+
+    # The name of the product behind this Repository
+    # @return [String]
+    def product_name
+      @product_name ||= data.xpath("cra:repositoryInfo/c:productName", NS::COMBINED).text
+    end
+
+    # The version of the product behind this Repository
+    # @return [String]
+    def product_version
+      @product_version ||= data.xpath("cra:repositoryInfo/c:productVersion", NS::COMBINED).text
+    end
+
+    # Changelog token representing the most recent change to this repository (will
+    # represent the most recent change at the time that this ActiveCMIS::Repository
+    # was created
+    # @return [String]
+    def latest_changelog_token
+      @changelog_token ||= data.xpath("cra:repositoryInfo/c:latestChangeLogToken", NS::COMBINED).text
+    end
+
+    # A URI that points to a web service for this repository. May not be present
+    # @return [URI, nil]
+    def thin_client_uri
+      @thin_client_uri ||= begin
+                             string = data.xpath("cra:repositoryInfo/c:thinClientURI", NS::COMBINED).text
+                             URI.parse(string) if string
+                           end
+    end
+
     # Finds the object with a given ID in the repository
     #
     # @param [String] id
