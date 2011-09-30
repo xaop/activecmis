@@ -83,7 +83,7 @@ module ActiveCMIS
     def thin_client_uri
       @thin_client_uri ||= begin
                              string = data.xpath("cra:repositoryInfo/c:thinClientURI", NS::COMBINED).text
-                             URI.parse(string) if string
+                             URI.parse(string) if string && string != ""
                            end
     end
 
