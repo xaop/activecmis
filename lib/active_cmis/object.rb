@@ -226,7 +226,7 @@ module ActiveCMIS
       unless parent_feed.empty?
         Collection.new(repository, parent_feed.first)
       else
-        parent_entry = Internal::Utils.extract_links(data, 'up', 'application/atom+xml','type' => 'entries')
+        parent_entry = Internal::Utils.extract_links(data, 'up', 'application/atom+xml','type' => 'entry')
         unless parent_entry.empty?
           e = conn.get_atom_entry(parent_entry.first)
           [ActiveCMIS::Object.from_atom_entry(repository, e)]
