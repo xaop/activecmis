@@ -4,14 +4,14 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{active_cmis}
+  s.name = "active_cmis"
   s.version = "0.2.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Joeri Samson"]
-  s.date = %q{2011-09-21}
-  s.description = %q{A CMIS library implementing both reading and updating capabilities through the AtomPub/REST binding to CMIS.}
-  s.email = %q{joeri@xaop.com}
+  s.date = "2011-09-30"
+  s.description = "A CMIS library implementing both reading and updating capabilities through the AtomPub/REST binding to CMIS."
+  s.email = "joeri@xaop.com"
   s.extra_rdoc_files = [
     "LICENSE",
     "README.md",
@@ -49,14 +49,13 @@ Gem::Specification.new do |s|
     "lib/active_cmis/type.rb",
     "lib/active_cmis/version.rb"
   ]
-  s.homepage = %q{http://xaop.com/labs/activecmis/}
+  s.homepage = "http://xaop.com/labs/activecmis/"
   s.require_paths = ["lib"]
   s.required_ruby_version = Gem::Requirement.new(">= 1.8.6")
-  s.rubygems_version = %q{1.3.7}
-  s.summary = %q{A library to interact with CMIS repositories through the AtomPub/REST binding}
+  s.rubygems_version = "1.8.10"
+  s.summary = "A library to interact with CMIS repositories through the AtomPub/REST binding"
 
   if s.respond_to? :specification_version then
-    current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
