@@ -216,8 +216,12 @@ module ActiveCMIS
 
     # The root folder of the repository (as defined in the CMIS standard)
     # @return [Folder]
-    def root_folder
-      @root_folder ||= object_by_id(data.xpath("cra:repositoryInfo/c:rootFolderId", NS::COMBINED).text)
+    def root_folder(reload = false)
+      if reload
+        @root_folder = object_by_id(data.xpath("cra:repositoryInfo/c:rootFolderId", NS::COMBINED).text)
+      else
+        @root_folder ||= object_by_id(data.xpath("cra:repositoryInfo/c:rootFolderId", NS::COMBINED).text)
+      end
     end
 
     # Returns an Internal::Connection object, normally you should not use this directly

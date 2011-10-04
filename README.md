@@ -1,4 +1,4 @@
-# ActiveCMIS Release 0.2.2 #
+# ActiveCMIS Release 0.2.5 #
 **Homepage**:  <http://xaop.com/labs/activecmis>  
 **Git**:       <http://github.com/xaop/activecmis>  
 **Documentation**: <http://rdoc.info/github/xaop/activecmis/master/frames>
@@ -16,6 +16,8 @@ ActiveCMIS is Ruby library aimed at easing the interaction with various CMIS pro
 If you haven't installed Nokogiri yet it will be installed automatically, you will need a C compiler and the development files for libxml2.
 
     > gem install active_cmis
+
+ActiveCMIS also depends on ntlm-http for ntlm authentication, unfortunately ntlm-http is broken on ruby 1.9.2
 ## Usage ##
     require 'active_cmis'
     repository = ActiveCMIS.load_config('configuration', 'optional_filename_for_config')
