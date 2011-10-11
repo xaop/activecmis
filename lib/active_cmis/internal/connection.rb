@@ -215,7 +215,7 @@ module ActiveCMIS
             else
               raise HTTPError::ClientError.new("A HTTP #{status} error occured, for more precision update the code:\n" + body)
             end
-          elsif 400 <= status && status < 500
+          elsif 500 <= status
             raise HTTPError::ServerError.new("The server encountered an internal error #{status} (this could be a client error though):\n" + body)
           end
         end
