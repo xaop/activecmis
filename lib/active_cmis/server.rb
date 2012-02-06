@@ -8,17 +8,18 @@ module ActiveCMIS
     attr_reader :logger
 
     # @return [Server] Cached by endpoint and logger
-    def self.new(endpoint, logger = nil)
+    def self.new(endpoint, logger = nil, authentication_info = nil)
       endpoint = case endpoint
                  when URI; endpoint
                  else URI(endpoint.to_s)
                  end
-      endpoints[[endpoint, logger]] ||= super(endpoint, logger || ActiveCMIS.default_logger)
+      server = super(endpoint, logger || ActiveCMIS.default_logger, authentication_info)
+      endpoints[endpoint.to_s][authentication_info][logger] ||= server
     end
 
     # @return [{(URI, Logger) => Server}] The cache of known Servers
     def self.endpoints
-      @endpoints ||= {}
+      @endpoints ||= Hash.new {|h, k| h[k] = Hash.new {|h2, k2| h2[k2] = {}}}
     end
 
     # @return [String]
@@ -33,34 +34,58 @@ module ActiveCMIS
     # A connection needs the URL to a CMIS REST endpoint.
     #
     # It's used to manage all communication with the CMIS Server
-    def initialize(endpoint, logger)
+    # @param endpoint [URI] The URL where the CMIS AtomPub REST endpoint can be found
+    # @param logger [Logger] The logger that will be used to log debug/info messages
+    # @param authentication_info [Array?] Optional authentication info to be used when retrieving the data from the AtomPub endpoint
+    def initialize(endpoint, logger, authentication_info = nil)
       @endpoint = endpoint
       @logger = logger
+
+      method, *params = authentication_info
+      if method
+        conn.authenticate(method, *params)
+      end
     end
 
+    # This returns a new Server object using the specified authentication info
+    #
     # @param (see ActiveCMIS::Internal::Connection#authenticate)
     # @see Internal::Connection#authenticate
     # @return [void]
-    def authenticate(method, *params)
-      conn.authenticate(method, *params)
+    def authenticate(*authentication_info)
+      new(endpoint, logger, authentication_info)
     end
 
     # Returns the _Repository identified by the ID
+    # Authentication will take place with the optional second paramater, if it
+    # is absent and there is server authentcation then the server authentication
+    # will be used
     #
-    # Cached by the repository_id, no way to reset cache yet
+    # Cached by the repository_id and, authentcation info. The cache can be reset
+    # by calling clear_repositories.
+    #
     # @param [String] repository_id
+    # @param [Array] authentication_info
     # @return [Repository]
-    def repository(repository_id)
-      cached_repositories[repository_id] ||= begin
+    def repository(repository_id, authentication_info = self.authentcation_info)
+      cached_repositories[[repository_id, authentication_info]] ||= begin
                                                repository_data = repository_info.
                                                  xpath("/app:service/app:workspace[cra:repositoryInfo/c:repositoryId[child::text() = '#{repository_id}']]", NS::COMBINED)
                                                if repository_data.empty?
                                                  raise Error::ObjectNotFound.new("The repository #{repository_id} doesn't exist")
                                                else
-                                                 Repository.new(conn.dup, logger.dup, repository_data)
+                                                 Repository.new(self, conn.dup, logger.dup, repository_data, authentication_info)
                                                end
                                              end
     end
+
+    # Reset cache of Repository objects
+    #
+    # @return [void]
+    def clear_repositories
+      @cached_repositories = {}
+    end
+
 
     # Lists all the available repositories
     #

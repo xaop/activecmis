@@ -37,16 +37,16 @@ module ActiveCMIS
         logger.level = Logger::WARN
       end
 
-      server = Server.new(config["server_url"], logger)
       if user_name = config["server_login"] and password = config["server_password"]
         auth_type = config["server_auth"] || :basic
-        server.authenticate(auth_type, user_name, password)
+        authentication_info = [auth_type, user_name, password]
       end
-      repository = server.repository(config["repository_id"])
+      server = Server.new(config["server_url"], logger, authentication_info)
       if user_name = config["repository_login"] and password = config["repository_password"]
         auth_type = config["repository_auth"] || :basic
-        repository.authenticate(auth_type, user_name, password)
+        authentication_info = [auth_type, user_name, password]
       end
+      repository = server.repository(config["repository_id"], authentication_info)
       return repository
     else
       raise "Configuration does not have correct format (#{config.class} is not a hash)"

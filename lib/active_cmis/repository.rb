@@ -3,20 +3,36 @@ module ActiveCMIS
     # @return [Logger] A logger to which debug output and so on is sent
     attr_reader :logger
 
+    # @return [ActiveCMIS::Server] The server from which the repository was
+    #     requested
+    attr_reader :server
+
     # @private
-    def initialize(connection, logger, initial_data) #:nodoc:
+    def initialize(server, connection, logger, initial_data, authentication_info) #:nodoc:
+      @server = server
       @conn = connection
       @data = initial_data
       @logger = logger
+      method, *params = authentication_info
+      if method
+        conn.authenticate(method, *params)
+      end
     end
 
     # Use authentication to access the CMIS repository
+    # This returns a new Repository object, the existing repository will still
+    # use the previous authentication info.
+    # If the used authentication info (method, username, password) is the same
+    # as for the current Repository object, then self will be returned (unless
+    # the server repository cache is cleared first)
     #
-    # e.g.: repo.authenticate(:basic, "username", "password")
-    # @return [void]
-    def authenticate(method, *params)
-      conn.authenticate(method, *params)
-      nil
+    # e.g.: authenticated = repo.authenticate(:basic, "username", "password")
+    # @param method [:basic, :ntlm]
+    # @param username [String]
+    # @param password [String]
+    # @return [Repository]
+    def authenticate(*authentication_info)
+      server.repository(key, authentication_info)
     end
 
     # The identifier of the repository
