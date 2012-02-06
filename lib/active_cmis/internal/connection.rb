@@ -179,7 +179,7 @@ module ActiveCMIS
           http.request(req) { |resp|
             status = resp.code.to_i
             body = resp.body
-            headers = resp.header
+            headers = resp
           }
 
           logger.debug "RECEIVED #{status}"

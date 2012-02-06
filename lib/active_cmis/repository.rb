@@ -319,7 +319,7 @@ module ActiveCMIS
     # e.g. fill_in_template("objectbyid", "id" => "@root@", "includeACL" => true)
     #      -> 'http://example.org/repo/%40root%40?includeRelationships&includeACL=true'
     def fill_in_template(template, values)
-      result = template.gsub /\{([^}]+)\}/ do |match|
+      result = template.gsub(/\{([^}]+)\}/) do |match|
         Internal::Utils.percent_encode(values[$1].to_s)
       end
     end

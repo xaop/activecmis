@@ -9,7 +9,7 @@ module ActiveCMIS
         delims  = "<>#%\""
         unwise  = '{}|\\\\^\[\]`'
         query   = ";/?:@&=+,$"
-        URI.escape(parameter, /[#{control+space+delims+unwise+query}]/o)
+        escape(parameter, /[#{control+space+delims+unwise+query}]/o)
       end
 
       # Given an url (string or URI) returns that url with the given parameters appended
@@ -33,7 +33,16 @@ module ActiveCMIS
       # FIXME?? percent_encode and escape_url_parameter serve nearly the same purpose, replace one?
       # @private
       def self.percent_encode(string)
-        URI.escape(string, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
+        escape(string, /[^#{URI::PATTERN::UNRESERVED}]/o)
+      end
+
+      def self.escape(string, pattern)
+        if defined?(URI::Parser)
+          parser = URI::Parser.new
+          parser.escape(string, pattern)
+        else
+          URI.escape(string, pattern)
+        end
       end
 
       # Returns id if id is already an object, object_by_id if id is a string, nil otherwise

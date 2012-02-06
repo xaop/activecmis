@@ -188,7 +188,7 @@ module ActiveCMIS
                       @next = xml.xpath("at:feed/at:link[@rel = 'next']/@href", NS::COMBINED).first
                       @next = @next.nil? ? nil : @next.text
 
-                      new_elements = xml.xpath('at:feed/at:entry', NS::COMBINED).map &@map_entry
+                      new_elements = xml.xpath('at:feed/at:entry', NS::COMBINED).map(&@map_entry)
                       @elements.concat(new_elements)
 
                       num_items = xml.xpath("at:feed/cra:numItems", NS::COMBINED).first
