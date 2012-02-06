@@ -25,6 +25,7 @@ begin
 
     gemspec.add_runtime_dependency 'nokogiri', '>= 1.4.1'
     gemspec.add_runtime_dependency 'ntlm-http', '~> 0.1.1'
+    gemspec.add_runtime_dependency 'require_relative', '~> 1.0.2'
 
     gemspec.required_ruby_version = '>= 1.8.6'
     gemspec.files.exclude '.gitignore'
