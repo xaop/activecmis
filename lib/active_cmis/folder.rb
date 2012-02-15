@@ -23,6 +23,11 @@ module ActiveCMIS
       end
     end
     cache :allowed_object_types
+    
+    # Tries to destroy the folder and all of its descendants
+    def destroy_tree
+      conn.delete(self_link + '/descendants')
+    end
 
     private
     def create_url
