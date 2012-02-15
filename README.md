@@ -1,4 +1,4 @@
-# ActiveCMIS Release 0.3.0 #
+# ActiveCMIS Release 0.3.1 #
 **Homepage**:  <http://xaop.com/labs/activecmis>  
 **Git**:       <http://github.com/xaop/activecmis>  
 **Documentation**: <http://rdoc.info/github/xaop/activecmis/master/frames>
