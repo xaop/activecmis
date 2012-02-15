@@ -53,7 +53,7 @@ module ActiveCMIS
     # @see Internal::Connection#authenticate
     # @return [void]
     def authenticate(*authentication_info)
-      new(endpoint, logger, authentication_info)
+      self.class.new(endpoint, logger, authentication_info)
     end
 
     # Returns the _Repository identified by the ID
