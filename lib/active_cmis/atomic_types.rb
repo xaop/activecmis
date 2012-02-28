@@ -35,7 +35,7 @@ module ActiveCMIS
       end
       def _rb2cmis(xml, value)
         v = value.to_s
-        if max_length && v.length > max_length
+        if max_length && max_length > 0 && v.length > max_length #xCMIS says maxLength=0
           raise Error::InvalidArgument.new("String representation is longer than maximum (max: #{max_length}, string: \n'\n#{v}\n')\n")
         end
         xml["c"].value v
