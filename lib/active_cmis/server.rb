@@ -68,16 +68,20 @@ module ActiveCMIS
     # @param [Array] authentication_info
     # @return [Repository]
     def repository(repository_id, authentication_info = self.authentcation_info)
-      cached_repositories[[repository_id, authentication_info]] ||= begin
-                                               repository_data = repository_info.
-                                                 xpath("/app:service/app:workspace[cra:repositoryInfo/c:repositoryId[child::text() = '#{repository_id}']]", NS::COMBINED)
-                                               if repository_data.empty?
-                                                 raise Error::ObjectNotFound.new("The repository #{repository_id} doesn't exist")
-                                               else
-                                                 Repository.new(self, conn.dup, logger.dup, repository_data, authentication_info)
-                                               end
-                                             end
+      key = repository_id, authentication_info
+      cached_repositories[key] ||= uncached_repository(*key)
     end
+
+    def uncached_repository(repository_id, authentication_info)
+      path = "/app:service/app:workspace[cra:repositoryInfo/c:repositoryId[child::text() = '#{repository_id}']]"
+      repository_data = repository_info.xpath(path, NS::COMBINED)
+      if repository_data.empty?
+        raise Error::ObjectNotFound.new("The repository #{repository_id} doesn't exist")
+      else
+        Repository.new(self, conn.dup, logger.dup, repository_data, authentication_info)
+      end
+    end
+    private :uncached_repository
 
     # Reset cache of Repository objects
     #
