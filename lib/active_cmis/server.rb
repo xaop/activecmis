@@ -67,7 +67,7 @@ module ActiveCMIS
     # @param [String] repository_id
     # @param [Array] authentication_info
     # @return [Repository]
-    def repository(repository_id, authentication_info = self.authentcation_info)
+    def repository(repository_id, authentication_info = self.authentication_info)
       cached_repositories[[repository_id, authentication_info]] ||= begin
                                                repository_data = repository_info.
                                                  xpath("/app:service/app:workspace[cra:repositoryInfo/c:repositoryId[child::text() = '#{repository_id}']]", NS::COMBINED)
