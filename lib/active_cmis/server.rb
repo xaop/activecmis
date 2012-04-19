@@ -41,7 +41,9 @@ module ActiveCMIS
       @endpoint = endpoint
       @logger = logger
 
+
       method, *params = authentication_info
+      @authentication_info = authentication_info
       if method
         conn.authenticate(method, *params)
       end
@@ -67,7 +69,7 @@ module ActiveCMIS
     # @param [String] repository_id
     # @param [Array] authentication_info
     # @return [Repository]
-    def repository(repository_id, authentication_info = self.authentcation_info)
+    def repository(repository_id, authentication_info = @authentication_info)
       key = repository_id, authentication_info
       cached_repositories[key] ||= uncached_repository(*key)
     end
