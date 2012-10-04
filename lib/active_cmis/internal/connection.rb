@@ -55,8 +55,11 @@ module ActiveCMIS
 
         req = Net::HTTP::Get.new(uri.request_uri)
         http = authenticate_request(uri, req)
-        response = http.request(req)
-        logger.debug "GOT (#{response.code}) #{url}"
+        response = nil
+        http.request(req) do |res|
+          logger.debug "GOT (#{res.code}) #{url}"
+          response = res
+        end
         response
       end
 

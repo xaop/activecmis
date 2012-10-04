@@ -224,7 +224,7 @@ module ActiveCMIS
 
 
     def updated_aspects(checkin = nil)
-      if working_copy? && !(checkin || repository.pwc_ubdatable)
+      if working_copy? && !(checkin || repository.pwc_updatable?)
         raise Error::NotSupported.new("Updating a PWC without checking in is not supported by repository")
       end
       unless working_copy? || checkin.nil?
