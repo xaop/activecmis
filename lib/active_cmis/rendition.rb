@@ -63,6 +63,12 @@ module ActiveCMIS
         status = response.code.to_i
         if 200 <= status && status < 300
           data = response.body
+        elsif 300 <= status && status < 400
+          location = response["location"]
+          new_url = URI.parse(location)
+          new_url = @url + location if new_url.relative?
+          @url = new_url
+          get_data
         else
           raise HTTPError.new("Problem downloading rendition: status: #{status}, message: #{response.body}")
         end

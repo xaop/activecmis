@@ -170,54 +170,51 @@ module ActiveCMIS
         end
       end
 
-      def handle_request(uri, req)
-        catch(:retry) do
-          logger.debug "#{req.method} #{uri}"
-          http = authenticate_request(uri, req)
+      def handle_request(uri, req, retry_count = 0)
+        logger.debug "#{req.method} #{uri}"
+        http = authenticate_request(uri, req)
 
-          status, body, headers = nil
-          http.request(req) { |resp|
-            status = resp.code.to_i
-            body = resp.body
-            headers = resp
-          }
+        status, body, headers = nil
+        http.request(req) { |resp|
+          status = resp.code.to_i
+          body = resp.body
+          headers = resp
+        }
 
-          logger.debug "RECEIVED #{status}"
+        logger.debug "RECEIVED #{status}"
 
-          if 200 <= status && status < 300
-            return body
-          elsif 300 <= status && status < 400
-            # follow the redirected a limited number of times
-            retry_count = (retry_count || 0) + 1
-            location = headers["location"]
-            logger.debug "REDIRECTING: #{location.inspect}"
-            if retry_count <= 3
-              new_uri = URI.parse(location)
-              if new_uri.relative?
-                uri = uri + location
-              end
-              req = req.class.new(uri.request_uri)
-              throw(:retry)
-            else
-              raise HTTPError.new("Too many redirects")
+        if 200 <= status && status < 300
+          return body
+        elsif 300 <= status && status < 400
+          # follow the redirected a limited number of times
+          location = headers["location"]
+          logger.debug "REDIRECTING: #{location.inspect}"
+          if retry_count <= 3
+            new_uri = URI.parse(location)
+            if new_uri.relative?
+              new_uri = uri + location
             end
-          elsif 400 <= status && status < 500
-            # Problem: some codes 400, 405, 403, 409, 500 have multiple meanings
-            logger.error "Error occurred when handling request:\n#{body}"
-            case status
-            when 400; raise Error::InvalidArgument.new(body)
-              # FIXME: can also be filterNotValid
-            when 401; raise HTTPError::AuthenticationError.new(body)
-            when 404; raise Error::ObjectNotFound.new(body)
-            when 403; raise Error::PermissionDenied.new(body)
-              # FIXME: can also be streamNotSupported (?? shouldn't that be 405??)
-            when 405; raise Error::NotSupported.new(body)
-            else
-              raise HTTPError::ClientError.new("A HTTP #{status} error occured, for more precision update the code:\n" + body)
-            end
-          elsif 500 <= status
-            raise HTTPError::ServerError.new("The server encountered an internal error #{status} (this could be a client error though):\n" + body)
+            new_req = req.class.new(uri.request_uri)
+            handle_request(new_uri, new_req, retry_count + 1)
+          else
+            raise HTTPError.new("Too many redirects")
           end
+        elsif 400 <= status && status < 500
+          # Problem: some codes 400, 405, 403, 409, 500 have multiple meanings
+          logger.error "Error occurred when handling request:\n#{body}"
+          case status
+          when 400; raise Error::InvalidArgument.new(body)
+            # FIXME: can also be filterNotValid
+          when 401; raise HTTPError::AuthenticationError.new(body)
+          when 404; raise Error::ObjectNotFound.new(body)
+          when 403; raise Error::PermissionDenied.new(body)
+            # FIXME: can also be streamNotSupported (?? shouldn't that be 405??)
+          when 405; raise Error::NotSupported.new(body)
+          else
+            raise HTTPError::ClientError.new("A HTTP #{status} error occured, for more precision update the code:\n" + body)
+          end
+        elsif 500 <= status
+          raise HTTPError::ServerError.new("The server encountered an internal error #{status} (this could be a client error though):\n" + body)
         end
       end
     end
