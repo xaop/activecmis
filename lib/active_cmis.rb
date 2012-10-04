@@ -1,7 +1,7 @@
 require 'nokogiri'
 require 'net/http'
 require 'net/https'
-require 'net/ntlm_http'
+#require 'net/ntlm_http'
 require 'yaml'
 require 'logger'
 require 'require_relative'

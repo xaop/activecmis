@@ -392,7 +392,7 @@ module ActiveCMIS
           result << {:message => :save_folders, :parameters => [parent_folders, checkin && !updated_attributes]}
         end
       end
-      if acl && acl.updated # We need to be able to do this for newly created documents and merge the two
+      if acl && acl.updated? # We need to be able to do this for newly created documents and merge the two
         result << {:message => :save_acl, :parameters => [acl]}
       end
 
