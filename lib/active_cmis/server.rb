@@ -70,7 +70,7 @@ module ActiveCMIS
     # @param [Array] authentication_info
     # @return [Repository]
     def repository(repository_id, authentication_info = @authentication_info)
-      key = repository_id, authentication_info
+      key = [repository_id, authentication_info]
       cached_repositories[key] ||= uncached_repository(*key)
     end
 
