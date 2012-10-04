@@ -27,6 +27,7 @@ module ActiveCMIS
           @authentication = {:method => :basic_auth, :params => params}
           @user = params.first
         when :ntlm, "ntlm"
+          require 'net/ntlm_http'
           @authentication = {:method => :ntlm_auth, :params => params}
           @user = params.first
         else raise "Authentication method not supported"
