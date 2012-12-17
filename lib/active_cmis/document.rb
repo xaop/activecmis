@@ -293,7 +293,7 @@ module ActiveCMIS
         url = link
       end
       headers = { "Content-Type" => content_type }
-      headers["Content-Disposition"] = "attachment; filename=#{stream[:file]}" if stream.has_key?(:file)
+      headers["Content-Disposition"] = %Q(attachment; filename="#{stream[:file]}") if stream.has_key?(:file)
       conn.put(url, data, headers)
       self
     end
