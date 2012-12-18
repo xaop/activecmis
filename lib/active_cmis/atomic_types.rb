@@ -89,14 +89,14 @@ module ActiveCMIS
         value.text.to_i
       end
       def _rb2cmis(xml, value)
-        v = value.to_int
+        v = value.to_i
         if (min_value && v < min_value) || (max_value && v > max_value)
           raise Error::InvalidArgument.new("OutOfBounds: #{v} should be between #{min_value} and #{max_value}")
         end
         xml["c"].value("%i" % v)
       end
       def can_handle?(value)
-        value.respond_to?(:to_int)
+        value.respond_to?(:to_i)
       end
 
       private :_cmis2rb, :_rb2cmis
