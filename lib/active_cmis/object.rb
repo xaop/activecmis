@@ -457,7 +457,7 @@ module ActiveCMIS
       end
 
       uri = self_link(parameters)
-      response = conn.put(uri, body)
+      response = conn.put(uri, body, "Content-Type" => "application/atom+xml;type=entry")
 
       data = Nokogiri::XML.parse(response, nil, nil, Nokogiri::XML::ParseOptions::STRICT).xpath("at:entry", NS::COMBINED)
       if data.xpath("cra:object/c:properties/c:propertyId[@propertyDefinitionId = 'cmis:objectId']/c:value", NS::COMBINED).text == id
