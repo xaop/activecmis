@@ -233,12 +233,14 @@ module ActiveCMIS
 
       result = super
 
-      unless checkin || key.nil? || updated_contents.nil?
-        # Don't set content_stream separately if it can be done by setting the content during create
-        #
-        # TODO: For checkin we could try to see if we can save it via puts *before* we checkin,
-        # If not checking in we should also try to see if we can actually save it
-        result << {:message => :save_content_stream, :parameters => [updated_contents]}
+      if !key.nil? && !updated_contents.nil?
+        if checkin
+          # Update the content stream before checking in
+          result.unshift(:message => :save_content_stream, :parameters => [updated_contents])
+        else
+          # TODO: check that the content stream is updateable
+          result << {:message => :save_content_stream, :parameters => [updated_contents]}
+        end
       end
 
       result

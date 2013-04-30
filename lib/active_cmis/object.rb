@@ -346,7 +346,7 @@ module ActiveCMIS
     def render_atom_entry(properties = self.class.attributes, attributes = self.attributes, options = {})
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.entry(NS::COMBINED) do
-          xml.parent.default_namespace = NS::COMBINED["at"]
+          xml.parent.default_namespace = NS::COMBINED["xmlns:at"]
           xml.author do
             xml.name conn.user # FIXME: find reliable way to set author?
           end
@@ -398,7 +398,7 @@ module ActiveCMIS
 
       if result.empty? && checkin
         # NOTE: this needs some thinking through: in particular this may not work well if there would be an updated content stream
-        result << {:message => :save_attributes, :parameters => [[], [], checkin]}
+        result << {:message => :save_attributes, :parameters => [{}, {}, checkin]}
       end
 
       result
@@ -433,7 +433,7 @@ module ActiveCMIS
       if attributes.empty? && checkin.nil?
         raise "Error: saving attributes but nothing to do"
       end
-      properties = self.class.attributes.reject {|key,_| !updated_attributes.include?(key)}
+      properties = self.class.attributes.select {|key,_| updated_attributes.include?(key)}
       body = render_atom_entry(properties, values, :checkin => checkin)
 
       if checkin.nil?
