@@ -346,15 +346,15 @@ module ActiveCMIS
     def render_atom_entry(properties = self.class.attributes, attributes = self.attributes, options = {})
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.entry(NS::COMBINED) do
-          xml.parent.namespace = xml.parent.namespace_definitions.detect {|ns| ns.prefix == "at"}
-          xml["at"].author do
-            xml["at"].name conn.user # FIXME: find reliable way to set author?
+          xml.parent.default_namespace = NS::COMBINED["at"]
+          xml.author do
+            xml.name conn.user # FIXME: find reliable way to set author?
           end
-          xml["at"].title attributes["cmis:name"]
+          xml.title attributes["cmis:name"]
           if attributes["cmis:objectId"]
-            xml["at"].id_ attributes["cmis:objectId"]
+            xml.id_ attributes["cmis:objectId"]
           else
-            xml["at"].id_ "random-garbage"
+            xml.id_ "random-garbage"
           end
           xml["cra"].object do
             xml["c"].properties do
