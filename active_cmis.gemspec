@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "active_cmis"
-  s.version = "0.3.2"
+  s.version = "0.3.3"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Joeri Samson"]
-  s.date = "2012-11-05"
+  s.date = "2013-05-08"
   s.description = "A CMIS library implementing both reading and updating capabilities through the AtomPub/REST binding to CMIS."
   s.email = "joeri@xaop.com"
   s.extra_rdoc_files = [
