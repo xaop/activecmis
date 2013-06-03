@@ -65,6 +65,19 @@ module ActiveCMIS
       @updated_contents = options
     end
 
+    # Sets versioning state
+    # @param [String] state A string of the desired versioning state
+    # Note: Possible values are "major", "minor", "none" or "checkedout", the default value is "major"
+    #
+    # @return [void]
+    def set_versioning_state(state)
+      raise ArgumentError, "You must pass a String" unless state.is_a?(String)
+      possible_values = ["major", "minor", "none", "checkedout"]
+      raise ArgumentError, "Given state is invalid. Possible values are #{possible_values.join(", ")}" unless possible_values.include?(state)
+
+      @versoning_state = state
+    end
+
     # Returns all documents in the version series of this document.
     # Uses self to represent the version of this document
     # @return [Collection<Document>, Array(self)]
@@ -261,11 +274,7 @@ module ActiveCMIS
     def create_url
       if f = parent_folders.first
         url = f.items.url
-        if self.class.versionable # Necessary in OpenCMIS at least
-          url
-        else
-          Internal::Utils.append_parameters(url, "versioningState" => "none")
-        end
+        Internal::Utils.append_parameters(url, "versioningState" => (self.class.versionable ? (@versoning_state || "major") : "none"))
       else
         raise Error::NotSupported.new("Creating an unfiled document is not supported by CMIS")
         # Can't create documents that are unfiled, CMIS does not support it (note this means exceptions should not actually be NotSupported)
