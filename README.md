@@ -1,8 +1,7 @@
-# ActiveCMIS Release 0.3.2 #
-**Homepage**:  <http://xaop.com/labs/activecmis>  
+# ActiveCMIS Release 0.3.4 #
 **Git**:       <http://github.com/xaop/activecmis>  
 **Documentation**: <http://rdoc.info/github/xaop/activecmis/master/frames>
-**Author**:    XAOP bvba  
+**Author**:    XAOP bvba
 **Copyright**: 2011
 **License**:   MIT License
 ## Synopsis ##
@@ -11,6 +10,15 @@ ActiveCMIS is Ruby library aimed at easing the interaction with various CMIS pro
 - Read support for all CMIS object types
 - Write support and the ability to create new objects.
 - Support for paging
+
+## Changes since 0.3.3 ##
+- added #set_versioning_state for documents (thanks to @zedtux)
+- improve checking method to make more parameters optional (and use set_versioning_state when possible)
+
+## Changes since 0.3.2 ##
+- Fix for header of PUT request (thanks to @linzhixing)
+- Improvement for integer conversion (thanks to @kennethgeerts)
+- Correctly set the default namespace (reported by @brunospy)
 
 ## Changes since 0.3.1 ##
 - Does not require ntlm-http unless needed for authentication
@@ -39,5 +47,3 @@ If you actually need NTLM authentication you can use https://github.com/xaop/ntl
 And so on ...
 
 Full documentation of the API can be found at [rdoc.info](http://rdoc.info/projects/xaop/activecmis)
-
-A tutorial can be found at [the xaop site](http://xaop.com/labs/activecmis "tutorial")

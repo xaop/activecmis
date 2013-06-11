@@ -11,7 +11,7 @@ module ActiveCMIS
         # Creates a proxy method for the given method names that caches the result.
         #
         # Parameters are passed and ignored, cached values will be returned regardless of the parameters.
-        # @param [Symbol, <Symbol>] Names of methods that will be cached
+        # @param [Symbol, <Symbol>] names Names of methods that will be cached
         # @return [void]
         def cache(*names)
           (@cached_methods ||= []).concat(names).uniq!
@@ -41,7 +41,7 @@ module ActiveCMIS
         #
         # If the given attribute does not yet exist the method #load_from_data will be called
         #
-        # @param [Symbol, <Symbol>] Names of desired attributes
+        # @param [Symbol, <Symbol>] names Names of desired attributes
         # @return [void]
         def cached_reader(*names)
           (@cached_methods ||= []).concat(names).uniq!
