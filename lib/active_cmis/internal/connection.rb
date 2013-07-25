@@ -42,6 +42,9 @@ module ActiveCMIS
       def get(url)
         uri = normalize_url(url)
 
+        # Ensure the parsed URL is an HTTP one
+        raise HTTPError::ClientError.new("Invalid URL #{url}") unless uri.is_a?(URI::HTTP)
+
         req = Net::HTTP::Get.new(uri.request_uri)
         handle_request(uri, req)
       end
