@@ -229,12 +229,15 @@ module ActiveCMIS
         raise ArgumentError, "Too many arguments for checkin"
       else
         major, comment, updated_attributes = *options
-        if Boolean === major
+        if TrueClass === major or FalseClass === major
           # Nothing changes: only defaults need to be filled in (if necessary)
         elsif String === major
           updated_attributes = comment
           comment = major
           # major will be true if: @versioning_state == "major", or if it's not set
+          major = @versioning_state != "minor"
+        elsif Hash === major
+          updated_attributes = major
           major = @versioning_state != "minor"
         end
         comment ||= ""
