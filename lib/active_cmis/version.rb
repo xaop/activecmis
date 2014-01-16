@@ -1,8 +1,10 @@
+require 'yaml'
 module ActiveCMIS
   module Version
-    MAJOR = 0
-    MINOR = 3
-    PATCH = 4
+    yaml = YAML.load_file(File.join(File.dirname(__FILE__), '/../../VERSION.yml'))
+    MAJOR = yaml[:major]
+    MINOR = yaml[:minor]
+    PATCH = yaml[:patch]
     STRING = "#{MAJOR}.#{MINOR}.#{PATCH}"
   end
 end
