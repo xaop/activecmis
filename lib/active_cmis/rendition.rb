@@ -42,7 +42,7 @@ module ActiveCMIS
     # Returns a hash with the name of the file to which was written, the length, and the content type
     #
     # *WARNING*: this loads the complete file in memory and dumps it at once, this should be fixed
-    # @param [String] filename Location to store the content.
+    # @param [String] file_name Location to store the content.
     # @return [Hash]
     def get_file(file_name)
       response = get_data

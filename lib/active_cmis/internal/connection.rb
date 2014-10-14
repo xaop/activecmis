@@ -7,7 +7,7 @@ module ActiveCMIS
       # @return [Logger] A logger used to send debug and info messages
       attr_reader :logger
 
-      # @param [Logger] Initialize with a logger of your choice
+      # @param [Logger] logger Initialize with a logger of your choice
       def initialize(logger)
         @logger = logger || ActiveCMIS.default_logger
       end

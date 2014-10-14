@@ -13,10 +13,8 @@ end
 
 begin
   require 'jeweler'
-  require './lib/active_cmis/version'
   Jeweler::Tasks.new do |gemspec|
     gemspec.name = "active_cmis"
-    gemspec.version = ActiveCMIS::Version::STRING
     gemspec.summary = "A library to interact with CMIS repositories through the AtomPub/REST binding"
     gemspec.description = "A CMIS library implementing both reading and updating capabilities through the AtomPub/REST binding to CMIS."
     gemspec.email = "joeri@xaop.com"
@@ -24,8 +22,8 @@ begin
     gemspec.authors = ["Joeri Samson"]
 
     gemspec.add_runtime_dependency 'nokogiri', '>= 1.4.1'
-    gemspec.add_runtime_dependency 'ntlm-http', '~> 0.1.1'
-    gemspec.add_runtime_dependency 'require_relative', '~> 1.0.2'
+    gemspec.add_runtime_dependency 'ntlm-http', '~> 0.1', '>= 0.1.1'
+    gemspec.add_runtime_dependency 'require_relative', '~> 1.0', '>= 1.0.2'
 
     gemspec.required_ruby_version = '>= 1.8.6'
     gemspec.files.exclude '.gitignore'

@@ -65,17 +65,23 @@ module ActiveCMIS
       @updated_contents = options
     end
 
-    # Sets versioning state
-    # @param [String] state A string of the desired versioning state
-    # Note: Possible values are "major", "minor", "none" or "checkedout", the default value is "major"
+    # Sets versioning state.
+    # Only possible on new documents, or PWC documents
+    #
+    # @param ["major", "minor", "none", "checkedout"] state A string of the desired versioning state
     #
     # @return [void]
     def set_versioning_state(state)
+      raise Error::Constraint.new("Can only set a different version state on PWC documents, or unsaved new documents") unless key.nil? || working_copy?
       raise ArgumentError, "You must pass a String" unless state.is_a?(String)
-      possible_values = ["major", "minor", "none", "checkedout"]
+      if key.nil?
+        possible_values = %w[major minor none checkedout]
+      else
+        possible_values = %w[major minor]
+      end
       raise ArgumentError, "Given state is invalid. Possible values are #{possible_values.join(", ")}" unless possible_values.include?(state)
 
-      @versoning_state = state
+      @versioning_state = state
     end
 
     # Returns all documents in the version series of this document.
@@ -193,21 +199,61 @@ module ActiveCMIS
       end
     end
 
-    # You can specify whether the new version should be major (defaults to true)
-    # You can optionally give a list of attributes that need to be set.
+    # @overload checkin(major, comment = "", updated_attributes = {})
+    #   Check in the private working copy. Raises a constraint error when the
+    #   document is not a working copy
     #
-    # This operation exists only for Private Working Copies
-    # @return [Document] The final version that results from the checkin
-    def checkin(major = true, comment = "", updated_attributes = {})
+    #   @param [Boolean] major Whether the document will be checked in as a major version
+    #   @param [String] comment An optional comment to use when creating the new version
+    #   @param [Hash] updated_attributes A hash with updated attributes
+    #   @return [Document] The final version that results from the checkin
+    # @overload checkin(comment = "", updated_attributes = {})
+    #   Check in the private working copy. Raises a constraint error when the
+    #   document is not a working copy
+    #   The version will be the version set by set_versioning_state (default is
+    #   a major version)
+    #
+    #   @param [String] comment An optional comment to use when creating the new version
+    #   @param [Hash] updated_attributes A hash with updated attributes
+    #   @return [Document] The final version that results from the checkin
+    # @overload checkin(updated_attributes = {})
+    #   Check in the private working copy with an empty message.
+    #   Raises a constraint error when the document is not a working copy
+    #   The version will be the version set by set_versioning_state (default is
+    #   a major version)
+    #
+    #   @param [Hash] updated_attributes A hash with updated attributes
+    #   @return [Document] The final version that results from the checkin
+    def checkin(*options)
+      if options.length > 3
+        raise ArgumentError, "Too many arguments for checkin"
+      else
+        major, comment, updated_attributes = *options
+        if TrueClass === major or FalseClass === major
+          # Nothing changes: only defaults need to be filled in (if necessary)
+        elsif String === major
+          updated_attributes = comment
+          comment = major
+          # major will be true if: @versioning_state == "major", or if it's not set
+          major = @versioning_state != "minor"
+        elsif Hash === major
+          updated_attributes = major
+          major = @versioning_state != "minor"
+        end
+        comment ||= ""
+        updated_attributes ||= {}
+      end
+
       if working_copy?
         update(updated_attributes)
         result = self
         updated_aspects([true, major, comment]).each do |hash|
           result = result.send(hash[:message], *hash[:parameters])
         end
+        @versioning_state = nil
         result
       else
-        raise "Not a working copy"
+        raise Error::Constraint, "Not a working copy"
       end
     end
 
@@ -274,7 +320,7 @@ module ActiveCMIS
     def create_url
       if f = parent_folders.first
         url = f.items.url
-        Internal::Utils.append_parameters(url, "versioningState" => (self.class.versionable ? (@versoning_state || "major") : "none"))
+        Internal::Utils.append_parameters(url, "versioningState" => (self.class.versionable ? (@versioning_state || "major") : "none"))
       else
         raise Error::NotSupported.new("Creating an unfiled document is not supported by CMIS")
         # Can't create documents that are unfiled, CMIS does not support it (note this means exceptions should not actually be NotSupported)
