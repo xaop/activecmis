@@ -41,7 +41,7 @@ module ActiveCMIS
         auth_type = config["server_auth"] || :basic
         authentication_info = [auth_type, user_name, password]
       end
-      server = Server.new(config["server_url"], logger, authentication_info)
+      server = Server.new(config["server_url"], logger, authentication_info, { :timeout => config["timeout"] })
       if user_name = config["repository_login"] and password = config["repository_password"]
         auth_type = config["repository_auth"] || :basic
         authentication_info = [auth_type, user_name, password]
@@ -77,7 +77,7 @@ module ActiveCMIS
     if config.is_a? Hash
       if config = config[config_name]
         connect(config)
-      else 
+      else
         raise "Configuration not found in file"
       end
     else

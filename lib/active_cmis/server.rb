@@ -6,14 +6,16 @@ module ActiveCMIS
     attr_reader :endpoint
     # @return [Logger] A default logger for derived repositories
     attr_reader :logger
+    # @return [Hash] Options to be used by the HTTP objects
+    attr_reader :options
 
     # @return [Server] Cached by endpoint and logger
-    def self.new(endpoint, logger = nil, authentication_info = nil)
+    def self.new(endpoint, logger = nil, authentication_info = nil, options = nil)
       endpoint = case endpoint
                  when URI; endpoint
                  else URI(endpoint.to_s)
                  end
-      server = super(endpoint, logger || ActiveCMIS.default_logger, authentication_info)
+      server = super(endpoint, logger || ActiveCMIS.default_logger, authentication_info, options)
       endpoints[endpoint.to_s][authentication_info][logger] ||= server
     end
 
@@ -37,10 +39,10 @@ module ActiveCMIS
     # @param endpoint [URI] The URL where the CMIS AtomPub REST endpoint can be found
     # @param logger [Logger] The logger that will be used to log debug/info messages
     # @param authentication_info [Array?] Optional authentication info to be used when retrieving the data from the AtomPub endpoint
-    def initialize(endpoint, logger, authentication_info = nil)
+    def initialize(endpoint, logger, authentication_info = nil, options = nil)
       @endpoint = endpoint
       @logger = logger
-
+      @options = options || {}
 
       method, *params = authentication_info
       @authentication_info = authentication_info
@@ -113,7 +115,7 @@ module ActiveCMIS
     end
 
     def conn
-      @conn ||= Internal::Connection.new(logger.dup)
+      @conn ||= Internal::Connection.new(logger.dup, @options)
     end
   end
 end

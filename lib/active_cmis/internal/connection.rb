@@ -6,10 +6,13 @@ module ActiveCMIS
       attr_reader :user
       # @return [Logger] A logger used to send debug and info messages
       attr_reader :logger
+      # @return [Hash] Options to be used by the HTTP objects
+      attr_reader :options
 
-      # @param [Logger] logger Initialize with a logger of your choice
-      def initialize(logger)
+      # @param [Logger] Initialize with a logger of your choice
+      def initialize(logger, options)
         @logger = logger || ActiveCMIS.default_logger
+        @options = options || {}
       end
 
       # Use authentication to access the CMIS repository
@@ -155,8 +158,12 @@ module ActiveCMIS
 
       def authenticate_request(uri, req)
         http = http_class.new(uri.host, uri.port)
-        if uri.scheme == 'https'
-          http.use_ssl = true
+        # Force to use SSL
+        http.use_ssl = (uri.scheme == 'https')
+        # Set the timeout
+        if options[:timeout]
+          http.open_timeout = options[:timeout]
+          http.read_timeout = options[:timeout]
         end
         if auth = @authentication
           req.send(auth[:method], *auth[:params])
