@@ -11,6 +11,12 @@ ActiveCMIS is Ruby library aimed at easing the interaction with various CMIS pro
 - Write support and the ability to create new objects.
 - Support for paging
 
+## Changes since 0.3.5 ##
+- implement the possibility to set the timeout to be used by the Net::HTTP object (thanks to zedtux)
+
+## Changes since 0.3.4 ##
+- Fix a bug with checkin
+
 ## Changes since 0.3.3 ##
 - added #set_versioning_state for documents (thanks to @zedtux)
 - improve checking method to make more parameters optional (and use set_versioning_state when possible)
