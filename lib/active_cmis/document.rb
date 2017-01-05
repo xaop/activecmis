@@ -42,7 +42,7 @@ module ActiveCMIS
     cache :renditions
 
     # Sets new content to be uploaded, does not alter values you will get from content_stream (for the moment)
-    # @param [Hash] options A hash containing exactly one of :file or :data
+    # @param [Hash] options A hash containing :file and/or :data
     # @option options [String] :file The name of a file to upload
     # @option options [#read] :data Data you want to upload (if #length is defined it should give the total length that can be read)
     # @option options [Boolean] :overwrite (true) Whether the contents should be overwritten (ignored in case of checkin)
@@ -349,7 +349,9 @@ module ActiveCMIS
       else
         url = link
       end
-      conn.put(url, data, "Content-Type" => content_type)
+      headers = { "Content-Type" => content_type }
+      headers["Content-Disposition"] = %Q(attachment; filename="#{stream[:file]}") if stream.has_key?(:file)
+      conn.put(url, data, headers)
       self
     end
   end
